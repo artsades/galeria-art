@@ -23,7 +23,7 @@ def get_favicon_final():
                 path_fav = os.path.join(folder, archivo)
                 with open(path_fav, "rb") as f:
                     return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
-    return "https://saidmontano.art/static/logo_said_montano.png" # Plan C: Tu logo de la web
+    return "https://saidmontano.art/static/said_perfil.jpg" # Plan C: Tu logo de la web
 
 fav_icon_data = get_favicon_final()
 
@@ -784,6 +784,7 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
 
