@@ -348,36 +348,23 @@ st.markdown('''
 ''', unsafe_allow_html=True)
 
 with st.expander("SOBRE EL ARTISTA"):
-    img_html = ""
-    if foto_b64:
-        # Foto con borde circular y tamaño ajustado
-        img_html = f'<img src="data:image/jpeg;base64,{foto_b64}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #eeeeee; margin-bottom: 10px;">'
-    
-    # El truco es quitar espacios innecesarios al inicio de las líneas de HTML
-    st.markdown(f'''
-<div style="width: 100%; overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse; border: none;">
-        <tr>
-            <td style="width: 15%; vertical-align: top; text-align: center; padding-right: 15px;">
-                {img_html}
-            </td>
-            <td style="width: 42.5%; vertical-align: top; font-family: 'Courier Prime', monospace; font-size: 0.85rem; text-align: justify; color: #FFFFFF; line-height: 1.7; padding-right: 15px;">
-                Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. 
-                Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistente, 
-                construyendo escenas figurativas de alta carga simbólica. A través de una estética oscura, el cuerpo humano 
-                aparece fragmentado o integrado dentro de estructuras que regulan identidad y control.
-            </td>
-            <td style="width: 42.5%; vertical-align: top; font-family: 'Courier Prime', monospace; font-size: 0.85rem; text-align: justify; color: #FFFFFF; line-height: 1.7;">
-                Paralelamente, ha desarrollado una línea escultórica que mantiene el mismo lenguaje oscuro y personal. 
-                Explora la materialidad del cuerpo y sus restos como símbolos de permanencia, desgaste y memoria. 
-                Su trabajo ha sido seleccionado consecutivamente en diversas plataformas nacionales de exhibición, 
-                consolidando una identidad visual coherente y técnica.
-            </td>
-        </tr>
-    </table>
-</div>
-</div>
-''', unsafe_allow_html=True) 
+    col_foto, col_texto1, col_texto2 = st.columns([1, 2, 2])
+
+    with col_foto:
+        # Usamos la ruta directa al archivo en tu carpeta assets
+        st.image("assets/said_perfil.jpg", use_container_width=True)
+
+    with col_texto1:
+        st.markdown("""
+        Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. 
+        Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistente.
+        """)
+
+    with col_texto2:
+        st.markdown("""
+        Paralelamente, ha desarrollado una línea escultórica que mantiene el mismo lenguaje oscuro y personal. 
+        Explora la materialidad del cuerpo y sus restos como símbolos de permanencia, desgaste y memoria.
+        """)
     
 # LÍNEA EXTRA DE SEGURIDAD PARA LA GALERÍA
 st.write("")
@@ -797,5 +784,6 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
