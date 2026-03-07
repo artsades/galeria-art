@@ -499,30 +499,35 @@ if archivos_csv:
                     url_det = f"https://raw.githubusercontent.com/artsades/galeria-said-montano/main/{ruta_detalle}"
                     st.markdown(f'<img src="{url_det}" style="width:100%; margin-bottom: 20px;">', unsafe_allow_html=True)
             
-            # BOTÓN DE CIERRE (Para evitar usar el botón 'atrás' del celular)
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("✕ CERRAR VISTA", use_container_width=True):
-                st.rerun()
+            # --- CASO A: SI ES ESTUDIO / PROCESO ---
+        if seccion_actual == "proceso":
+            st.image(ruta_img, use_container_width=True)
+            st.markdown(f'''
+                <div style="font-family: {FUENTE_INDUSTRIAL}; font-size: 0.65rem; color: #666; margin-top: -10px; line-height: 1.2; padding-bottom: 20px;">
+                    <b style="color:#000;">{row.get('titulo', 'S/T').upper()}</b><br>
+                    {row.get('descripcion', 'Registro de estudio.')}
+                </div>
+            ''', unsafe_allow_html=True)
 
-            # --- CASO B: SI ES GALERÍA COMERCIAL ---
-            else:
-                # 1. CONVERSIÓN Y LLAVE
-                img_b64 = image_to_base64(ruta_img)
-                t_key = tecnica_sel.replace(" ", "_")
+        # --- CASO B: SI ES GALERÍA COMERCIAL ---
+        else:
+            # 1. CONVERSIÓN Y LLAVE
+            img_b64 = image_to_base64(ruta_img)
+            t_key = tecnica_sel.replace(" ", "_")
 
-                # 2. CSS PARA EL BOTÓN-IMAGEN
-                st.markdown(f"""<style>
-                    div.st-key-img_btn_{id_obra}_{t_key} button {{
-                        background-image: url("data:image/jpeg;base64,{img_b64}") !important;
-                        background-size: cover !important;
-                        background-position: center !important;
-                        height: {ALTO_OBRA} !important;
-                        width: 100% !important;
-                        border: 1px solid #eee !important;
-                        background-color: transparent !important;
-                        border-radius: 0px !important;
-                    }}
-                </style>""", unsafe_allow_html=True)
+            # 2. CSS PARA EL BOTÓN-IMAGEN
+            st.markdown(f"""<style>
+                div.st-key-img_btn_{id_obra}_{t_key} button {{
+                    background-image: url("data:image/jpeg;base64,{img_b64}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                    height: {ALTO_OBRA} !important;
+                    width: 100% !important;
+                    border: 1px solid #eee !important;
+                    background-color: transparent !important;
+                    border-radius: 0px !important;
+                }}
+            </style>""", unsafe_allow_html=True)
 
             # 3. EL BOTÓN-IMAGEN
             if st.button("", key=f"img_btn_{id_obra}_{t_key}", use_container_width=True):
@@ -535,17 +540,16 @@ if archivos_csv:
             try: precio_f = f"${float(solo_n):,.0f} MXN"
             except: precio_f = "CONSULTAR PRECIO"
 
-                        # 5. FICHA TÉCNICA
-                        st.markdown(f'''
-                        <div style="width: 100%; font-family: {FUENTE_INDUSTRIAL}; text-transform: uppercase; text-align: left; border-top: 1px solid #000; padding-top: 10px; margin-top: -15px;">
-                            <p style="font-size: 1.0rem; color: #000; font-weight: bold; margin: 0;">{row.get('titulo', 'S/T')}</p>
-                            <p style="font-size: 0.7rem; color: #444; margin: 2px 0;">SERIE: {row.get('serie', 'S/S')}</p>
-                            <p style="font-size: 0.75rem; color: #444; margin: 0;">{str(row.get('tecnica', '')).upper()} SOBRE {str(row.get('soporte', '')).upper()}</p>
-                            <p style="font-size: 0.75rem; color: #444; margin: 0;">{row.get('medidas', '')}</p>
-                            <p style="font-size: {T_PRECIO}; color: #000; font-weight: bold; margin-top: 10px;">{precio_f}</p>
-                            <p style="font-size: 0.65rem; font-weight: bold; color: #000; margin-bottom: 10px;">[{str(row.get('disponibilidad', 'EN VENTA')).upper()}]</p>
-                        </div>''', unsafe_allow_html=True)
-
+            # 5. FICHA TÉCNICA
+            st.markdown(f'''
+            <div style="width: 100%; font-family: {FUENTE_INDUSTRIAL}; text-transform: uppercase; text-align: left; border-top: 1px solid #000; padding-top: 10px; margin-top: -15px;">
+                <p style="font-size: 1.0rem; color: #000; font-weight: bold; margin: 0;">{row.get('titulo', 'S/T')}</p>
+                <p style="font-size: 0.7rem; color: #444; margin: 2px 0;">SERIE: {row.get('serie', 'S/S')}</p>
+                <p style="font-size: 0.75rem; color: #444; margin: 0;">{str(row.get('tecnica', '')).upper()} SOBRE {str(row.get('soporte', '')).upper()}</p>
+                <p style="font-size: 0.75rem; color: #444; margin: 0;">{row.get('medidas', '')}</p>
+                <p style="font-size: {T_PRECIO}; color: #000; font-weight: bold; margin-top: 10px;">{precio_f}</p>
+                <p style="font-size: 0.65rem; font-weight: bold; color: #000; margin-bottom: 10px;">[{str(row.get('disponibilidad', 'EN VENTA')).upper()}]</p>
+            </div>''', unsafe_allow_html=True)
                         # 6. BOTÓN DE DETALLES + WHATSAPP (EL QUE YA TENÍAS)
                         # --- Pega aquí el bloque de las columnas (col_det, col_wa) que arreglamos antes ---
 
@@ -827,6 +831,7 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
 
