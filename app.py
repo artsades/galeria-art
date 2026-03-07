@@ -350,30 +350,33 @@ st.markdown('''
 with st.expander("SOBRE EL ARTISTA"):
     img_html = ""
     if foto_b64:
-        # He aumentado ligeramente el tamaño de la foto a 120px para que luzca mejor en cuadros anchos
-        img_html = f'<img src="data:image/jpeg;base64,{foto_b64}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 1px solid #eeeeee;">'
+        # Foto con borde circular y tamaño ajustado
+        img_html = f'<img src="data:image/jpeg;base64,{foto_b64}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #eeeeee; margin-bottom: 10px;">'
     
+    # El truco es quitar espacios innecesarios al inicio de las líneas de HTML
     st.markdown(f'''
-        <table class="tabla-bio">
-            <tr>
-                <td style="width: 15%; vertical-align: top; text-align: center;">
-                    {img_html}
-                </td>
-                <td style="width: 42.5%; vertical-align: top; font-family: 'Courier Prime'; font-size: 0.8rem; text-align: justify; color: #4D4D4D; line-height: 1.7;">
-                    Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. 
-                    Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistente, 
-                    construyendo escenas figurativas de alta carga simbólica. A través de una estética oscura, el cuerpo humano 
-                    aparece fragmentado o integrado dentro de estructuras que regulan identidad y control.
-                </td>
-                <td style="width: 42.5%; vertical-align: top; font-family: 'Courier Prime'; font-size: 0.8rem; text-align: justify; color: #4D4D4D; line-height: 1.7;">
-                    Paralelamente, ha desarrollado una línea escultórica que mantiene el mismo lenguaje oscuro y personal. 
-                    Explora la materialidad del cuerpo y sus restos como símbolos de permanencia, desgaste y memoria. 
-                    Su trabajo ha sido seleccionado consecutivamente en diversas plataformas nacionales de exhibición, 
-                    consolidando una identidad visual coherente y técnica.
-                </td>
-            </tr>
-        </table>
-    ''', unsafe_allow_html=True)
+<div style="width: 100%; overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; border: none;">
+        <tr>
+            <td style="width: 15%; vertical-align: top; text-align: center; padding-right: 15px;">
+                {img_html}
+            </td>
+            <td style="width: 42.5%; vertical-align: top; font-family: 'Courier Prime', monospace; font-size: 0.85rem; text-align: justify; color: #FFFFFF; line-height: 1.7; padding-right: 15px;">
+                Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. 
+                Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistente, 
+                construyendo escenas figurativas de alta carga simbólica. A través de una estética oscura, el cuerpo humano 
+                aparece fragmentado o integrado dentro de estructuras que regulan identidad y control.
+            </td>
+            <td style="width: 42.5%; vertical-align: top; font-family: 'Courier Prime', monospace; font-size: 0.85rem; text-align: justify; color: #FFFFFF; line-height: 1.7;">
+                Paralelamente, ha desarrollado una línea escultórica que mantiene el mismo lenguaje oscuro y personal. 
+                Explora la materialidad del cuerpo y sus restos como símbolos de permanencia, desgaste y memoria. 
+                Su trabajo ha sido seleccionado consecutivamente en diversas plataformas nacionales de exhibición, 
+                consolidando una identidad visual coherente y técnica.
+            </td>
+        </tr>
+    </table>
+</div>
+''', unsafe_allow_html=True)
     
 # LÍNEA EXTRA DE SEGURIDAD PARA LA GALERÍA
 st.write("")
@@ -790,5 +793,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 if opcion:
     st.session_state.key_srv += 1
     desplegar_info_servicio(opcion)
+
 
     #===   streamlit run app.py   ===#
