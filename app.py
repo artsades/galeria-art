@@ -504,25 +504,25 @@ if archivos_csv:
             if st.button("✕ CERRAR VISTA", use_container_width=True):
                 st.rerun()
 
-                    # --- CASO B: SI ES GALERÍA COMERCIAL ---
-                    else:
-                        # 1. CONVERSIÓN Y LLAVE
-                        img_b64 = image_to_base64(ruta_img)
-                        t_key = tecnica_sel.replace(" ", "_")
+            # --- CASO B: SI ES GALERÍA COMERCIAL ---
+            else:
+                # 1. CONVERSIÓN Y LLAVE
+                img_b64 = image_to_base64(ruta_img)
+                t_key = tecnica_sel.replace(" ", "_")
 
-                        # 2. CSS PARA EL BOTÓN-IMAGEN
-                        st.markdown(f"""<style>
-                            div.st-key-img_btn_{id_obra}_{t_key} button {{
-                                background-image: url("data:image/jpeg;base64,{img_b64}") !important;
-                                background-size: cover !important;
-                                background-position: center !important;
-                                height: {ALTO_OBRA} !important;
-                                width: 100% !important;
-                                border: 1px solid #eee !important;
-                                background-color: transparent !important;
-                                border-radius: 0px !important;
-                            }}
-                        </style>""", unsafe_allow_html=True)
+                # 2. CSS PARA EL BOTÓN-IMAGEN
+                st.markdown(f"""<style>
+                    div.st-key-img_btn_{id_obra}_{t_key} button {{
+                        background-image: url("data:image/jpeg;base64,{img_b64}") !important;
+                        background-size: cover !important;
+                        background-position: center !important;
+                        height: {ALTO_OBRA} !important;
+                        width: 100% !important;
+                        border: 1px solid #eee !important;
+                        background-color: transparent !important;
+                        border-radius: 0px !important;
+                    }}
+                </style>""", unsafe_allow_html=True)
 
                         # 3. EL BOTÓN-IMAGEN
                         if st.button("", key=f"img_btn_{id_obra}_{t_key}", use_container_width=True):
