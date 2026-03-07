@@ -6,6 +6,7 @@ import os
 import base64
 
 st.markdown('<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">', unsafe_allow_html=True)
+
 # --- BÓVEDA SEO: PALABRAS INVISIBLES PARA GOOGLE ---
 PALABRAS_SEO = "Said Montaño, artista visual mexicano, pintura al óleo CDMX, arte contemporáneo oscuro, realismo figurativo, cuadros al óleo, galería de arte online México, arte simbólico, escultura contemporánea, comprar arte directo artista, estudio de arte Ciudad de México, fine art photography, coleccionismo de arte, arte figurativo oscuro."
 
@@ -451,6 +452,37 @@ if archivos_csv:
         FUENTE_INDUSTRIAL = "'Courier Prime', monospace"
         C_FONDO_MODAL = "#FFFFFF"
 
+        # === COPIAR DESDE AQUÍ: CONFIGURACIÓN 2 COLUMNAS MÓVIL / 5 PC ===
+        st.markdown("""
+            <style>
+            /* Contenedor de las columnas */
+            [data-testid="stHorizontalBlock"] {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            /* Ajuste para Celulares (2 columnas) */
+            @media (max-width: 768px) {
+                [data-testid="stHorizontalBlock"] > div {
+                    min-width: 45% !important;
+                    flex: 1 1 45% !important;
+                }
+                /* Ajuste de altura de imagen para celular para que no se vea gigante */
+                div[class*="st-key-img_btn_"] button {
+                    height: 250px !important;
+                }
+            }
+            /* Ajuste para PC (5 columnas) */
+            @media (min-width: 769px) {
+                [data-testid="stHorizontalBlock"] > div {
+                    min-width: 18% !important;
+                    flex: 1 1 18% !important;
+                }
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        # === HASTA AQUÍ ===
+        
         # --- FUNCIÓN GLOBAL DEL VISOR ---
         @st.dialog(" ", width="large")
         def visor_galeria(id_ref):
@@ -800,6 +832,7 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
 
