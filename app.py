@@ -368,13 +368,19 @@ with st.expander("SOBRE EL ARTISTA"):
         
     with col_texto1:
         st.markdown("""
-        Said Montaño s un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistente, construyendo escenas figurativas de alta carga simbólica. A través de una estética oscura, el cuerpo humano aparece fragmentado, intervenido o integrado dentro de estructuras que regulan identidad, control y pertenencia.
-        """)
+        <div style="color: #000000; font-family: 'Courier Prime', monospace; font-size: 15px; text-align: justify; line-height: 1.6;">
+            Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. 
+            Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistente.
+        </div>
+        """, unsafe_allow_html=True)
 
     with col_texto2:
         st.markdown("""
-        Paralelamente a su producción pictórica, el artista ha desarrollado una línea escultórica que mantiene el mismo lenguaje oscuro y personal, explorando la materialidad del cuerpo y sus restos como símbolos de permanencia, desgaste y memoria. Su trabajo escultórico ha sido seleccionado de manera consecutiva en cinco ediciones dentro de plataformas nacionales de exhibición, consolidando una identidad visual coherente en contextos de alta visibilidad sin diluir su discurso.
-        """)
+        <div style="color: #000000; font-family: 'Courier Prime', monospace; font-size: 15px; text-align: justify; line-height: 1.6;">
+            Paralelamente, ha desarrollado una línea escultórica que mantiene el mismo lenguaje oscuro y personal. 
+            Explora la materialidad del cuerpo y sus restos como símbolos de permanencia, desgaste y memoria.
+        </div>
+        """, unsafe_allow_html=True)
     
 # LÍNEA EXTRA DE SEGURIDAD PARA LA GALERÍA
 st.write("")
@@ -794,6 +800,7 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
 
