@@ -364,9 +364,7 @@ with st.expander("SOBRE EL ARTISTA"):
                     box-shadow: 0px 4px 6px rgba(0,0,0,0.3);">
             </div>
         ''', unsafe_allow_html=True)
-
-    with col2:
-        # Aquí sigue tu texto de la biografía...
+        
     with col_texto1:
         st.markdown("""
         Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. 
@@ -797,6 +795,7 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
 
