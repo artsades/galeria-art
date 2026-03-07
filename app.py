@@ -807,83 +807,41 @@ import streamlit.components.v1 as components
 
 import streamlit.components.v1 as components
 
-# --- LIMPIEZA TOTAL Y ZOOM FORZADO ---
+import streamlit.components.v1 as components
+
+# --- CAZADOR DE LOGOS Y ACTIVADOR DE ZOOM ---
 components.html("""
 <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
 <script>
-    function limpiarYActivar() {
-        // 1. OCULTAR LOGOS DE STREAMLIT Y GITHUB (Nivel Script)
-        const selectors = [
-            'header', 
-            'footer', 
-            '#MainMenu', 
-            '.stAppDeployButton', 
-            'div[data-testid="stStatusWidget"]',
-            'a[href*="github.com"]'
+    function limpiezaProfunda() {
+        // 1. Buscamos y destruimos los logos repetidamente
+        const elementos = [
+            'header', 'footer', '#MainMenu', 
+            '.stAppDeployButton', '[data-testid="stDecoration"]',
+            '[data-testid="stStatusWidget"]', '[data-testid="stToolbar"]'
         ];
-        selectors.forEach(s => {
-            const el = document.querySelector(s);
-            if (el) el.style.display = 'none';
+        
+        elementos.forEach(selector => {
+            const el = window.parent.document.querySelector(selector);
+            if (el) {
+                el.style.display = 'none';
+                el.style.visibility = 'hidden';
+            }
         });
 
-        // 2. ACTIVAR ZOOM
-        const images = Array.from(document.querySelectorAll('img')).filter(img => img.width > 50);
+        // 2. Intentamos activar el zoom en las imágenes del padre
+        const images = Array.from(window.parent.document.querySelectorAll('img')).filter(img => img.width > 60);
         if (images.length > 0) {
-            mediumZoom(images, {
-                margin: 0,
-                background: 'rgba(0,0,0,0.95)'
-            });
+            mediumZoom(images, { margin: 0, background: 'rgba(0,0,0,0.95)' });
         }
     }
 
-    // Ejecutar varias veces para asegurar que alcance los elementos al cargar
-    setTimeout(limpiarYActivar, 500);
-    setTimeout(limpiarYActivar, 2000);
-    setTimeout(limpiarYActivar, 5000);
-
-    // Vigilante para el modal "Ver detalles"
-    const observer = new MutationObserver(limpiarYActivar);
-    observer.observe(document.body, { childList: true, subtree: true });
-</script>
-
-<style>
-    /* CSS de Respaldo para ocultar logos */
-    header, footer, #MainMenu, .stAppDeployButton {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-    }
-    /* Estilo para que el zoom no falle */
-    .medium-zoom-overlay { z-index: 999999 !important; }
-    .medium-zoom-image--opened { z-index: 1000000 !important; }
-</style>
-""", height=0)
-
-import streamlit.components.v1 as components
-
-# --- ESTE ES EL BLOQUE QUE FALTA ---
-components.html("""
-<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
-<script>
-    function limpiarYZoom() {
-        // 1. Matar logos con JS (por si el CSS falla)
-        const selectors = ['header', 'footer', '#MainMenu', '.stAppDeployButton', 'div[data-testid="stStatusWidget"]'];
-        selectors.forEach(s => {
-            const el = document.querySelector(s);
-            if (el) el.style.display = 'none';
-        });
-
-        // 2. Activar Zoom en las obras
-        const images = Array.from(document.querySelectorAll('img')).filter(img => img.width > 60);
-        mediumZoom(images, { margin: 0, background: 'rgba(0,0,0,0.9)' });
-    }
-
-    // Intentar limpiar varias veces mientras carga la página
-    setTimeout(limpiarYZoom, 500);
-    setTimeout(limpiarYZoom, 2000);
-    
-    // Vigilar si el usuario abre "Ver detalles" para limpiar ahí también
-    new MutationObserver(limpiarYZoom).observe(document.body, { childList: true, subtree: true });
+    // Ejecutar la limpieza cada 500ms durante los primeros 5 segundos
+    let intentos = 0;
+    const intervalo = setInterval(() => {
+        limpiezaProfunda();
+        intentos++;
+        if (intentos > 10) clearInterval(intervalo);
+    }, 500);
 </script>
 """, height=0)
-
