@@ -350,9 +350,20 @@ st.markdown('''
 with st.expander("SOBRE EL ARTISTA"):
     col_foto, col_texto1, col_texto2 = st.columns([1, 2, 2])
 
-    with col_foto:
-        # Usamos la ruta directa al archivo en tu carpeta assets
-        st.image("https://raw.githubusercontent.com/artsades/galeria-said-montano/main/said_perfil.jpg", use_container_width=True)
+    # Código para la foto circular y estilizada
+        foto_url = "https://raw.githubusercontent.com/artsades/galeria-said-montano/main/said_perfil.jpg.jpg"
+        
+        st.markdown(f'''
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="{foto_url}" style="
+                    width: 120px; 
+                    height: 120px; 
+                    border-radius: 50%; 
+                    object-fit: cover; 
+                    border: 2px solid #eeeeee; 
+                    box-shadow: 0px 4px 6px rgba(0,0,0,0.3);">
+            </div>
+        ''', unsafe_allow_html=True)
 
     with col_texto1:
         st.markdown("""
@@ -784,6 +795,7 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
 
