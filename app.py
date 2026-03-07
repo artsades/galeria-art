@@ -352,7 +352,7 @@ with st.expander("SOBRE EL ARTISTA"):
 
     with col_foto:
         # Usamos la ruta directa al archivo en tu carpeta assets
-        st.image("said_perfil.jpg.jpg", use_container_width=True)
+        st.image("https://raw.githubusercontent.com/artsades/galeria-said-montano/main/said_perfil.jpg.jpg", use_container_width=True)
 
     with col_texto1:
         st.markdown("""
@@ -784,6 +784,7 @@ if opcion:
 
 
     #===   streamlit run app.py   ===#
+
 
 
 
