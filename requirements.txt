@@ -1,3 +1,7 @@
 streamlit
+
 pandas
-pillow
+
+beautifulsoup4
+
+requests
