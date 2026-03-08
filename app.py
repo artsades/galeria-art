@@ -197,9 +197,9 @@ st.markdown(f"""
         display: none !important;
     }}
     
-    /* Si esos iconos son botones de Streamlit, esto los oculta */
-    button[kind="secondary"] {{
-        display: none !important;
+    /* Solo ocultamos lo que es seguro de Streamlit */
+    header, footer, #MainMenu {{
+        visibility: hidden !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -811,13 +811,13 @@ if opcion:
     desplegar_info_servicio(opcion)
 import streamlit.components.v1 as components
 
-# --- ZOOM COMPATIBLE Y LIMPIEZA INTERNA ---
+# --- RESTAURACIÓN DE IMÁGENES Y ZOOM SEGURO ---
 components.html("""
 <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
 <script>
-    // Función simple que solo toca lo que está permitido
-    function activarZoom() {
-        const images = Array.from(document.querySelectorAll('img')).filter(img => img.width > 60);
+    function inicializarZoom() {
+        // Seleccionamos las imágenes directamente en este contenedor
+        const images = Array.from(document.querySelectorAll('img')).filter(img => img.width > 50);
         if (images.length > 0) {
             mediumZoom(images, {
                 margin: 0,
@@ -825,8 +825,7 @@ components.html("""
             });
         }
     }
-    // Esperamos un momento a que carguen las fotos
-    setTimeout(activarZoom, 1000);
+    // Damos un tiempo pequeño para que las imágenes se rendericen
+    setTimeout(inicializarZoom, 1000);
 </script>
 """, height=0)
-
