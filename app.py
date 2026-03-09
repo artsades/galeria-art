@@ -225,9 +225,8 @@ st.markdown(f"""
     header, footer, #MainMenu {{
         visibility: hidden !important;
     }}
-  /* --- RESPONSIVE: 2 COLUMNAS EN CELULAR (PROPORCIÓN CORRECTA) --- */
+  /* --- RESPONSIVE: 2 COLUMNAS SIN ESTIRAR (VERSIÓN FINAL) --- */
     @media (max-width: 800px) {{
-        /* 1. Forzamos el Grid de 2 columnas */
         [data-testid="stHorizontalBlock"] {{
             display: flex !important;
             flex-direction: row !important;
@@ -236,30 +235,32 @@ st.markdown(f"""
         }}
         
         [data-testid="stHorizontalBlock"] > div {{
-            width: calc(50% - 5px) !important; /* 2 por fila */
+            width: calc(50% - 5px) !important; 
             min-width: calc(50% - 5px) !important;
             flex: 0 0 calc(50% - 5px) !important;
         }}
 
-        /* 2. AJUSTE QUIRÚRGICO DE PROPORCIÓN (Said Montaño) */
+        /* BLOQUEO TOTAL DE PROPORCIÓN (Said Montaño) */
         div.stButton > button:not(:has(p)) {{
-            /* --- CAMBIO CRÍTICO AQUÍ --- */
-            /* Quitamos el alto fijo de 500px y lo hacemos automático */
-            height: auto !important; 
-            
-            /* Usamos aspect-ratio para mantener la proporción de la obra (19x28cm) */
-            /* La proporción es Ancho / Alto = 19 / 28 = 0.67 */
+            width: 100% !important;
+            /* Forzamos la proporción 19:28 (Ancho/Alto) */
             aspect-ratio: 19 / 28 !important; 
             
-            /* Nos aseguramos de que la imagen cubra todo el botón */
+            /* BLOQUEAMOS CUALQUIER INTENTO DE ESTIRAMIENTO */
+            height: auto !important;
+            min-height: auto !important; 
+            max-height: 350px !important; /* Límite de seguridad para cel */
+            
             background-size: cover !important;
             background-position: center !important;
             border: 1px solid #eee !important;
+            margin-bottom: 5px !important;
         }}
         
-        /* 3. Ajustamos el tamaño de la ficha técnica */
+        /* Ajuste de textos para que no empujen hacia abajo */
         div[style*="font-family: 'Courier Prime'"] p {{
-            font-size: 0.65rem !important;
+            font-size: 0.62rem !important;
+            line-height: 1.1 !important;
         }}
     }}
     </style>
@@ -906,6 +907,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
