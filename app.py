@@ -35,6 +35,8 @@ st.markdown('<meta name="viewport" content="width=device-width, initial-scale=1.
 PALABRAS_SEO = f"{SEO_DINAMICO}, Said Montaño artista, realismo figurativo, arte oscuro, envíos seguros a USA y México."
 # Título dinámico para la pestaña del navegador
 t_pestana = st.session_state.get('tec_ref', 'ARCHIVO VISUAL')
+# Crear un ancla invisible en la parte superior
+st.markdown('<div id="subir"></div>', unsafe_allow_html=True)
 
 # --- CARGA DEL FAVICON (VERSIÓN RASTREADOR) ---
 def get_favicon_final():
@@ -917,6 +919,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
