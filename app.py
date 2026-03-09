@@ -225,42 +225,41 @@ st.markdown(f"""
     header, footer, #MainMenu {{
         visibility: hidden !important;
     }}
- /* --- GRID 2 COLUMNAS: EMPAREJAMIENTO FORZADO --- */
+ /* --- GRID 2 COLUMNAS: FUERZA BRUTA (SIMPLIFICADO) --- */
     @media (max-width: 800px) {{
-        /* 1. Obligamos al contenedor a mezclar todas las columnas */
+        /* 1. Forzamos que el contenedor de las filas NO se rompa */
         [data-testid="stHorizontalBlock"] {{
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            justify-content: space-between !important;
+            align-items: flex-start !important;
             gap: 10px !important;
         }}
-        
-        /* 2. Hacemos que cada 'carril' de Streamlit sea flexible */
-        [data-testid="column"] {{
-            width: calc(50% - 5px) !important;
-            flex: 1 0 calc(45%) !important; /* Permite que se acomoden de 2 en 2 */
-            max-width: calc(50% - 5px) !important;
-            min-width: calc(45%) !important;
+
+        /* 2. Forzamos a las columnas a medir 47% (Para que quepan 2 con el gap) */
+        div[data-testid="column"] {{
+            width: 47% !important;
+            flex: 0 0 47% !important;
+            min-width: 47% !important;
+            max-width: 47% !important;
         }}
 
-        /* 3. Blindaje de proporción para que no se estiren */
+        /* 3. Blindaje de la imagen (19x28cm) */
         div.stButton > button:not(:has(p)) {{
             width: 100% !important;
-            aspect-ratio: 19 / 28 !important; 
+            aspect-ratio: 19 / 28 !important;
             height: auto !important;
+            min-height: 180px !important;
             max-height: 280px !important;
             background-size: cover !important;
             background-position: center !important;
         }}
 
-        /* 4. Ajuste del icono de WhatsApp */
-        /* Lo movemos un poco a la derecha para que no estorbe al botón */
+        /* 4. Ajuste del icono de WhatsApp para que no flote */
         a[href*="wa.me"] {{
             position: absolute !important;
-            right: 0px !important;
-            left: auto !important;
-            top: -42px !important;
+            right: 5px !important;
+            top: -45px !important;
         }}
     }}
     </style>
@@ -907,6 +906,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
