@@ -225,44 +225,46 @@ st.markdown(f"""
     header, footer, #MainMenu {{
         visibility: hidden !important;
     }}
- /* --- GRID 2 COLUMNAS: SOLUCIÓN DEFINITIVA (ORDEN Y PROPORCIÓN) --- */
+ /* --- GRID 2 COLUMNAS: TÉCNICA DE REJILLA INVISIBLE (ORDEN Y PROPORCIÓN) --- */
     @media (max-width: 800px) {{
-        /* 1. RE-ESTRUCTURACIÓN DEL CONTENEDOR PADRE */
+        /* 1. ATACAMOS EL CONTENEDOR DE LA GALERÍA */
         [data-testid="stHorizontalBlock"] {{
-            display: flex !important;
-            flex-flow: row wrap !important; /* Fuerza el flujo continuo 1,2,3,4... */
-            gap: 10px !important;
-            align-items: stretch !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important; /* FORZAMOS 2 COLUMNAS REALES */
+            gap: 15px !important;
+            width: 100% !important;
         }}
 
-        /* 2. FORZAMOS A LAS COLUMNAS A SER CELDAS DE GRID */
+        /* 2. ANULAMOS EL COMPORTAMIENTO DE COLUMNA INDEPENDIENTE */
         [data-testid="column"] {{
-            width: calc(50% - 5px) !important;
-            flex: 1 1 calc(50% - 5px) !important;
-            min-width: calc(50% - 5px) !important;
-            max-width: calc(50% - 5px) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            flex: none !important;
         }}
 
-        /* 3. BLINDAJE DE LA IMAGEN (EVITA EL ESTIRAMIENTO POST-CARGA) */
+        /* 3. BLINDAJE TOTAL DE LA IMAGEN (NO MÁS ESTIRAMIENTOS) */
         div.stButton > button:not(:has(p)) {{
             width: 100% !important;
-            aspect-ratio: 19 / 28 !important; /* Proporción de tu obra */
+            aspect-ratio: 19 / 28 !important; /* Proporción 19x28cm */
             
-            /* Bloqueo estricto de altura */
+            /* Bloqueo absoluto de altura */
             height: auto !important;
-            min-height: 150px !important; /* Altura mínima para que no desaparezca */
-            max-height: 280px !important; /* Altura máxima para que no se estire */
+            min-height: 200px !important; 
+            max-height: 300px !important; 
             
             background-size: cover !important;
             background-position: center !important;
             border: 1px solid #eee !important;
             display: block !important;
+            margin: 0 !important;
         }}
 
-        /* 4. ARREGLO PARA LAS ÚLTIMAS OBRAS (EVITA QUE SEAN GIGANTES) */
-        /* Si solo queda una obra al final, este código evita que ocupe el 100% */
-        [data-testid="column"]:last-child:nth-child(odd) {{
-            max-width: calc(50% - 5px) !important;
+        /* 4. AJUSTE DE TEXTOS PARA QUE NO SE AMONTONEN */
+        div[style*="font-family: 'Courier Prime'"] p {{
+            font-size: 0.60rem !important;
+            line-height: 1.1 !important;
+            white-space: normal !important;
         }}
     }}
     </style>
@@ -909,6 +911,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
