@@ -225,9 +225,9 @@ st.markdown(f"""
     header, footer, #MainMenu {{
         visibility: hidden !important;
     }}
-    /* --- RESPONSIVE: 2 COLUMNAS EN CELULAR --- */
+  /* --- RESPONSIVE: 2 COLUMNAS EN CELULAR (PROPORCIÓN CORRECTA) --- */
     @media (max-width: 800px) {{
-        /* Forzamos a que las columnas de Streamlit se dividan en 2 */
+        /* 1. Forzamos el Grid de 2 columnas */
         [data-testid="stHorizontalBlock"] {{
             display: flex !important;
             flex-direction: row !important;
@@ -236,17 +236,28 @@ st.markdown(f"""
         }}
         
         [data-testid="stHorizontalBlock"] > div {{
-            width: calc(50% - 5px) !important; 
+            width: calc(50% - 5px) !important; /* 2 por fila */
             min-width: calc(50% - 5px) !important;
             flex: 0 0 calc(50% - 5px) !important;
         }}
 
-        /* Ajustamos el alto de la imagen en celular */
+        /* 2. AJUSTE QUIRÚRGICO DE PROPORCIÓN (Said Montaño) */
         div.stButton > button:not(:has(p)) {{
-            height: 250px !important; 
+            /* --- CAMBIO CRÍTICO AQUÍ --- */
+            /* Quitamos el alto fijo de 500px y lo hacemos automático */
+            height: auto !important; 
+            
+            /* Usamos aspect-ratio para mantener la proporción de la obra (19x28cm) */
+            /* La proporción es Ancho / Alto = 19 / 28 = 0.67 */
+            aspect-ratio: 19 / 28 !important; 
+            
+            /* Nos aseguramos de que la imagen cubra todo el botón */
+            background-size: cover !important;
+            background-position: center !important;
+            border: 1px solid #eee !important;
         }}
         
-        /* Ajustamos el tamaño de la letra */
+        /* 3. Ajustamos el tamaño de la ficha técnica */
         div[style*="font-family: 'Courier Prime'"] p {{
             font-size: 0.65rem !important;
         }}
@@ -895,6 +906,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
