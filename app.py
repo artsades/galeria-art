@@ -35,10 +35,8 @@ st.markdown('<meta name="viewport" content="width=device-width, initial-scale=1.
 PALABRAS_SEO = f"{SEO_DINAMICO}, Said Montaño artista, realismo figurativo, arte oscuro, envíos seguros a USA y México."
 # Título dinámico para la pestaña del navegador
 t_pestana = st.session_state.get('tec_ref', 'ARCHIVO VISUAL')
-# Crea un espacio vacío al principio de la galería
-top_anchor = st.container()
-with top_anchor:
-    st.write("") # Un espacio invisible
+# Crear un ancla invisible en la parte superior
+st.markdown('<div id="subir"></div>', unsafe_allow_html=True)
 
 # --- CARGA DEL FAVICON (VERSIÓN RASTREADOR) ---
 def get_favicon_final():
@@ -666,17 +664,13 @@ if archivos_csv:
                     if st.session_state.get('obra_seleccionada') == id_obra:
                         visor_galeria(id_obra)
                         st.session_state.obra_seleccionada = None
-# --- CÁLCULO DE PAGINACIÓN SEGURO (USANDO DF_F) ---
-OBRAS_POR_PAGINA = 12 
-# Usamos df_f que es la variable que ya tienes definida arriba
-total_obras = len(df_f) if 'df_f' in locals() else 0
-total_paginas = 0 
 
-if total_obras > 0:
-    total_paginas = (total_obras // OBRAS_POR_PAGINA) + (1 if total_obras % OBRAS_POR_PAGINA > 0 else 0)
-
-# --- PAGINADOR CON AJUSTE MILIMÉTRICO ---
+       # --- PAGINADOR CON AJUSTE MILIMÉTRICO ---
 if total_paginas > 1:
+    # 1. ESTO ES NUEVO: Creamos un ancla invisible justo arriba de los números
+    # para que al refrescar, el navegador sepa a dónde mirar.
+    st.markdown('<div id="inicio_galeria"></div>', unsafe_allow_html=True)
+    
     st.markdown('<div style="height: 50px;"></div>', unsafe_allow_html=True) 
     
     st.markdown("""<style>
@@ -685,20 +679,7 @@ if total_paginas > 1:
             display: flex;
             justify-content: center;
         }
-        div.st-key-pag_final_v3 div[role="radiogroup"] { 
-            gap: 30px !important; 
-            background: transparent !important; 
-        }
-        div.st-key-pag_final_v3 label p { 
-            font-family: 'Courier Prime' !important; 
-            color: #888 !important; 
-        }
-        div.st-key-pag_final_v3 label:has(input:checked) p { 
-            color: #000 !important; 
-            font-weight: bold !important; 
-            text-decoration: underline !important; 
-        }
-        div.st-key-pag_final_v3 [data-baseweb="radio"] div::after { display: none !important; }
+        /* ... (tu estilo de radio se queda igual) ... */
     </style>""", unsafe_allow_html=True)
     
     opciones_pag = [str(i+1) for i in range(total_paginas)]
@@ -717,6 +698,17 @@ if total_paginas > 1:
     if nuevo_indice != st.session_state.get('pag_ref'):
         st.session_state.pag_ref = nuevo_indice
         st.query_params["p"] = nuevo_indice
+        
+        # 2. ESTO ES NUEVO: Inyectamos el "impulso" hacia arriba antes del rerun
+        st.components.v1.html(
+            """
+            <script>
+                window.parent.window.scrollTo(0,0);
+            </script>
+            """,
+            height=0
+        )
+        
         st.rerun()
 
 
@@ -925,14 +917,6 @@ components.html("""
     });
 </script>
 """, height=0)
-
-
-
-
-
-
-
-
 
 
 
