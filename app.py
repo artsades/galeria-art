@@ -225,41 +225,45 @@ st.markdown(f"""
     header, footer, #MainMenu {{
         visibility: hidden !important;
     }}
- /* --- GRID 2 COLUMNAS: FUERZA BRUTA (SIMPLIFICADO) --- */
+ /* --- GRID 2 COLUMNAS: EL "ROMPE-MUROS" --- */
     @media (max-width: 800px) {{
-        /* 1. Forzamos que el contenedor de las filas NO se rompa */
-        [data-testid="stHorizontalBlock"] {{
+        /* 1. Forzamos al contenedor padre a no colapsar */
+        div[data-testid="stHorizontalBlock"] {{
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            align-items: flex-start !important;
             gap: 10px !important;
+            width: 100% !important;
         }}
 
-        /* 2. Forzamos a las columnas a medir 47% (Para que quepan 2 con el gap) */
+        /* 2. ATACAMOS DIRECTAMENTE A LAS COLUMNAS CON EL SELECTOR MÁS FUERTE */
         div[data-testid="column"] {{
-            width: 47% !important;
-            flex: 0 0 47% !important;
-            min-width: 47% !important;
-            max-width: 47% !important;
+            flex: 0 0 calc(50% - 10px) !important;
+            min-width: calc(50% - 10px) !important;
+            max-width: calc(50% - 10px) !important;
+            width: calc(50% - 10px) !important;
+            display: block !important; /* Evita que Streamlit lo oculte o lo apile */
+            float: left !important; /* Plan de rescate por si el flex falla */
         }}
 
-        /* 3. Blindaje de la imagen (19x28cm) */
+        /* 3. BLINDAJE DE IMAGEN (19x28cm) */
         div.stButton > button:not(:has(p)) {{
             width: 100% !important;
             aspect-ratio: 19 / 28 !important;
             height: auto !important;
             min-height: 180px !important;
-            max-height: 280px !important;
+            max-height: 300px !important;
             background-size: cover !important;
             background-position: center !important;
+            border: 1px solid #eee !important;
         }}
 
-        /* 4. Ajuste del icono de WhatsApp para que no flote */
+        /* 4. AJUSTE DE ICONO WHATSAPP */
         a[href*="wa.me"] {{
             position: absolute !important;
             right: 5px !important;
             top: -45px !important;
+            z-index: 99 !important;
         }}
     }}
     </style>
@@ -906,6 +910,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
