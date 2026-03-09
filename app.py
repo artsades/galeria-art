@@ -667,23 +667,15 @@ if archivos_csv:
                         visor_galeria(id_obra)
                         st.session_state.obra_seleccionada = None
 # --- CÁLCULO DE PAGINACIÓN SEGURO ---
-obras_por_pagina = 12 # O el número que tengas configurado
+obras_por_pagina = 12 
 total_obras = len(datos_galeria)
-
-# Definimos un valor por defecto para que nunca falle
 total_paginas = 0 
 
 if total_obras > 0:
-    # Calculamos el total de páginas real
     total_paginas = (total_obras // obras_por_pagina) + (1 if total_obras % obras_por_pagina > 0 else 0)
 
-# --- TU LÍNEA 671 AHORA ESTARÁ PROTEGIDA ---
+# --- PAGINADOR CON AJUSTE MILIMÉTRICO ---
 if total_paginas > 1:
-    # Aquí va todo tu estilo CSS del paginador y el st.radio...
-       # --- PAGINADOR CON AJUSTE MILIMÉTRICO ---
-if total_paginas > 1:
-    # 1. ESTO ES NUEVO: Creamos un ancla invisible justo arriba de los números
-    # para que al refrescar, el navegador sepa a dónde mirar. 
     st.markdown('<div style="height: 50px;"></div>', unsafe_allow_html=True) 
     
     st.markdown("""<style>
@@ -692,7 +684,20 @@ if total_paginas > 1:
             display: flex;
             justify-content: center;
         }
-        /* ... (tu estilo de radio se queda igual) ... */
+        div.st-key-pag_final_v3 div[role="radiogroup"] { 
+            gap: 30px !important; 
+            background: transparent !important; 
+        }
+        div.st-key-pag_final_v3 label p { 
+            font-family: 'Courier Prime' !important; 
+            color: #888 !important; 
+        }
+        div.st-key-pag_final_v3 label:has(input:checked) p { 
+            color: #000 !important; 
+            font-weight: bold !important; 
+            text-decoration: underline !important; 
+        }
+        div.st-key-pag_final_v3 [data-baseweb="radio"] div::after { display: none !important; }
     </style>""", unsafe_allow_html=True)
     
     opciones_pag = [str(i+1) for i in range(total_paginas)]
@@ -711,10 +716,6 @@ if total_paginas > 1:
     if nuevo_indice != st.session_state.get('pag_ref'):
         st.session_state.pag_ref = nuevo_indice
         st.query_params["p"] = nuevo_indice
-        
-        # En lugar de JS, simplemente reiniciamos. 
-        # Streamlit, al detectar un cambio de estado, 
-        # suele resetear el scroll al contenedor más alto.
         st.rerun()
 
 
@@ -923,6 +924,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
