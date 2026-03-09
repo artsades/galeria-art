@@ -699,17 +699,26 @@ if total_paginas > 1:
         st.session_state.pag_ref = nuevo_indice
         st.query_params["p"] = nuevo_indice
         
-        # 2. ESTO ES NUEVO: Inyectamos el "impulso" hacia arriba antes del rerun
+        # INYECCIÓN DIRECTA DE SCROLL (Said Montaño)
         st.components.v1.html(
-            """
+            f"""
             <script>
-                window.parent.window.scrollTo(0,0);
+                // Buscamos la ventana principal del celular
+                const principal = window.parent.window;
+                
+                // Opción A: Subida instantánea al tope
+                principal.scrollTo(0, 0);
+                
+                // Opción B: Refuerzo por si el navegador es lento
+                setTimeout(() => {{
+                    principal.scrollTo({{top: 0, behavior: 'smooth'}});
+                }}, 100);
             </script>
             """,
             height=0
         )
         
-        st.rerun()
+        st.rerun()rerun()
 
 
 
@@ -917,6 +926,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
