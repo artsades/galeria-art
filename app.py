@@ -225,46 +225,57 @@ st.markdown(f"""
     header, footer, #MainMenu {{
         visibility: hidden !important;
     }}
- /* --- GRID 2 COLUMNAS: TÉCNICA DE REJILLA INVISIBLE (ORDEN Y PROPORCIÓN) --- */
+ /* --- GRID 2 COLUMNAS: SOLUCIÓN ESTABLE (ORDEN, PROPORCIÓN Y WHATSAPP) --- */
     @media (max-width: 800px) {{
-        /* 1. ATACAMOS EL CONTENEDOR DE LA GALERÍA */
+        /* 1. Obligamos a que el bloque horizontal se comporte como una lista */
         [data-testid="stHorizontalBlock"] {{
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important; /* FORZAMOS 2 COLUMNAS REALES */
-            gap: 15px !important;
-            width: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
         }}
 
-        /* 2. ANULAMOS EL COMPORTAMIENTO DE COLUMNA INDEPENDIENTE */
+        /* 2. Cada columna de obra ocupará exactamente el 47% para que quepan 2 */
         [data-testid="column"] {{
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            flex: none !important;
+            width: 47% !important;
+            flex: 0 0 47% !important;
+            min-width: 47% !important;
+            max-width: 47% !important;
+            margin-bottom: 20px !important;
         }}
 
-        /* 3. BLINDAJE TOTAL DE LA IMAGEN (NO MÁS ESTIRAMIENTOS) */
+        /* 3. Blindaje de la imagen (19x28cm) */
         div.stButton > button:not(:has(p)) {{
             width: 100% !important;
-            aspect-ratio: 19 / 28 !important; /* Proporción 19x28cm */
-            
-            /* Bloqueo absoluto de altura */
+            aspect-ratio: 19 / 28 !important;
             height: auto !important;
-            min-height: 200px !important; 
-            max-height: 300px !important; 
-            
+            min-height: 180px !important;
+            max-height: 260px !important;
             background-size: cover !important;
             background-position: center !important;
             border: 1px solid #eee !important;
-            display: block !important;
-            margin: 0 !important;
         }}
 
-        /* 4. AJUSTE DE TEXTOS PARA QUE NO SE AMONTONEN */
-        div[style*="font-family: 'Courier Prime'"] p {{
-            font-size: 0.60rem !important;
-            line-height: 1.1 !important;
-            white-space: normal !important;
+        /* 4. Rescatamos el botón de WhatsApp y los detalles */
+        /* Aseguramos que el contenedor relativo no se esconda */
+        div[style*="position: relative"] {{
+            display: block !important;
+            width: 100% !important;
+            height: 40px !important;
+        }}
+
+        /* Ajustamos el icono de WA para que no flote fuera de la celda */
+        a[href*="wa.me"] {{
+            left: auto !important;
+            right: 5px !important;
+            top: -35px !important;
+        }}
+
+        /* Botón "VER DETALLES" más pequeño para que quepa */
+        div.stButton > button:has(p) {{
+            width: 100% !important;
+            font-size: 0.55rem !important;
         }}
     }}
     </style>
@@ -911,6 +922,7 @@ components.html("""
     });
 </script>
 """, height=0)
+
 
 
 
