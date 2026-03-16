@@ -3,9 +3,15 @@
 import streamlit as st
 import pandas as pd
 import os
+import re
 import base64
 import requests
 from bs4 import BeautifulSoup
+import streamlit.components.v1 as components
+import textwrap
+# --- CONFIGURACIÓN DE CARGA ---
+if 'obras_visibles' not in st.session_state:
+    st.session_state.obras_visibles = 8
 
 # --- FUNCIÓN DE SEO DINÁMICO (ÓLEO Y ACUARELA) ---
 def obtener_seo_estudio():
@@ -62,10 +68,17 @@ st.set_page_config(
 # Inyección SEO (Sin generar espacios ni líneas negras)
 st.markdown(f'<div style="display:none; height:0; width:0; overflow:hidden; visibility:hidden;">{PALABRAS_SEO}</div>', unsafe_allow_html=True)
 
-# --- MEMORIA DE NAVEGACIÓN (F5) Y GESTO ATRÁS ---
-query_params = st.query_params
-obra_en_url = query_params.get("obra")
+# --- MEMORIA DE NAVEGACIÓN (SIMPLE Y LIMPIA) ---
+# Leemos directamente si hay una obra seleccionada en la URL
+obra_en_url = st.query_params.get("obra")
 
+# Si el usuario cambió de técnica o dio "Ver más", limpiamos la selección
+if st.session_state.get('limpiar_fantasma'):
+    st.query_params.clear()
+    obra_en_url = None
+    st.session_state.limpiar_fantasma = False
+
+###=====ESTO SE QUEDA COMO ESTÁ=####
 if "p" in st.query_params:
     st.session_state.pag_ref = int(st.query_params["p"])
 elif 'pag_ref' not in st.session_state:
@@ -74,8 +87,7 @@ elif 'pag_ref' not in st.session_state:
 if "t" in st.query_params:
     st.session_state.tec_ref = st.query_params["t"]
 elif 'tec_ref' not in st.session_state:
-    st.session_state.tec_ref = "ACUARELA" # <--- Aprovechamos para poner Acuarela primero
-
+    st.session_state.tec_ref = "ACUARELA" # <--- Aprovechamos para poner Acuarela primero CAMBIA CUANDO QUIERAS
 def image_to_base64(path):
     if os.path.exists(path):
         with open(path, 'rb') as f:
@@ -99,7 +111,11 @@ st.markdown(f"""
     /* 2.1 BASE Y FONDO */
     .stAppHeader {{ display: none !important; }}
     .stApp {{ background-color: #ffffff; }}
-    .block-container {{ padding: 0 50px !important; margin-top: -10px !important; }}
+    .block-container {{ 
+    padding: 0 50px !important; 
+    padding-top: 0.5rem !important; 
+    margin-top: -180px !important; 
+}}
 
     /* 2.1 BARRA ADN VISUAL (CON EFECTO BREATHE) */
     @keyframes adn-breathe {{
@@ -118,7 +134,7 @@ st.markdown(f"""
         letter-spacing: 6px;
         width: 100vw;
         margin-left: calc(-50vw + 50%);
-        margin-top: 0px !important;
+        margin-top: 50px !important;  /* SUBE EL BANNER DE ENVIOS */
         margin-bottom: 0px !important;
         animation: adn-breathe 2s ease-in-out infinite;
     }}
@@ -129,7 +145,7 @@ st.markdown(f"""
         background-color: #F0F0F0 !important;
         border-radius: 0px !important;
         border: none !important;
-        border-bottom: 1px solid #757575 !important;
+        border-bottom: 1px solid #E8E8E8 !important;
         height: 15px !important;
         min-height: 15px !important;
     }}
@@ -137,9 +153,9 @@ st.markdown(f"""
     .stApp div[data-baseweb="input"] input {{
         background-color: transparent !important;
         color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        -webkit-text-fill-color: #B3B3B3 !important; /* CAMBIA EL COLOR LETRAS BUSCADOR */
         font-family: 'Courier Prime' !important;
-        font-size: 0.85rem !important;
+        font-size: 0.8rem !important;
         padding: 0px 10px !important;
         line-height: 32px !important;
     }}
@@ -160,17 +176,17 @@ st.markdown(f"""
         width: 18px !important;
     }}
 
-    /* 2.5 TEXTOS Y RADIO */
+    /* 2.5 TEXTOS Y RADIO SECCION DE LAS TECNICAS BARRA*/
     .stRadio div[role="radiogroup"] label p {{ 
-        color: #000000 !important;
+        color: #999999 !important;   /* COLOR DE LAS LETRAS SECCION TECNICAS */
         font-family: 'Courier Prime' !important;
         font-weight: bold !important;
     }}
     
     div[data-testid="stRadio"] {{
         width: 100% !important;
-        margin-top: 2px !important; 
-        margin-bottom: 20px !important;
+        margin-top: -50px !important; /* SEPARA EL BLOQUE DE LA SECCION DEL LOGO" */
+        margin-bottom: 10px !important;  /* SEPARA EL BLOQUE DE LA SECCION DE "SOBRE EL ARTISTA" */
     }}
 
     div[data-testid="stRadio"] > div[role="radiogroup"] {{
@@ -185,7 +201,7 @@ st.markdown(f"""
         left: 50% !important;
         transform: translateX(-50%) !important;
         z-index: 10 !important;
-        background-color: #D3D3D3 !important; 
+        background-color: #F2F2F2 !important; /* COLOR DE FONDO SECCION TECNICAS */
         padding: 1px 0px !important;
         border-radius: 0px !important;
     }}
@@ -194,146 +210,166 @@ st.markdown(f"""
     
     div[data-testid="stRadio"] label p {{
         font-family: 'Courier Prime' !important;
-        font-size: 0.85rem !important;
-        color: #888888 !important; 
-        letter-spacing: 5px !important; 
+        font-size: 0.8rem !important;   /* TAMAÑO DE LAS LETRAS SECCION TECNICAS */
+        letter-spacing: 1px !important; /* ESPACIO DE LAS LETRAS SECCION TECNICAS */
         text-transform: uppercase;
         white-space: nowrap !important;
     }}
 
     div[data-testid="stRadio"] label:has(input:checked) p {{
-        color: #000000 !important;
+        color: #B50095!important;  /* COLOR DE LAS LETRAS SECCION TECNICAS CUANDO LA SELECCIONAS */
         text-decoration: underline !important;
-        text-underline-offset: 10px !important;
+        text-underline-offset: 5px !important; /* ESPACIO DEL SUBRAYADO DE LAS LETRAS SECCION TECNICAS */
     }}
-    /* OCULTAR TODO EL HEADER Y FOOTER DE RAÍZ */
-    div[data-testid="stToolbar"],
-    div[data-testid="stDecoration"],
-    div[data-testid="stStatusWidget"],
-    header, 
-    footer, 
-    #MainMenu, 
-    .stAppDeployButton {{
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
+    /* 1. ANULAR VARIABLES DE MODO OSCURO DE STREAMLIT */
+    :root {{
+        --text-color: #000000 !important;
     }}
-    /* Intentar tapar los iconos de las esquinas */
-    iframe {{
-        display: none !important;
+
+    /* Forzamos que cualquier párrafo dentro de la galería ignore el tema del sistema */
+    [data-testid="stMarkdownContainer"] p, 
+    [data-testid="stMarkdownContainer"] span {{
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
     }}
-    
-    /* Solo ocultamos lo que es seguro de Streamlit */
-    header, footer, #MainMenu {{
-        visibility: hidden !important;
+
+    /* Blindaje para que el navegador no intente invertir colores */
+    .stApp {{
+        color-scheme: light !important;
     }}
-/* --- RESPONSIVE: GRID 2 COLUMNAS (VERSIÓN SAID FINAL) --- */
-    @media (max-width: 800px) {{
-        /* 1. Evitamos que las celdas se estiren entre sí */
-        [data-testid="stHorizontalBlock"] {{
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            align-items: flex-start !important; /* <--- CLAVE: Evita estiramiento vertical */
-            gap: 8px !important;
-        }}
-        
-        [data-testid="stHorizontalBlock"] > div {{
-            width: calc(50% - 4px) !important; 
-            min-width: calc(50% - 4px) !important;
-            flex: 0 0 calc(50% - 4px) !important;
-            padding: 0px !important;
+    /* 1. BOTONES ESTILO LIMPIO (SIN CONTORNO) */
+    div.stButton > button {{
+        background-color: #f0f0f0 !important;
+        color: #000000 !important;
+        border: none !important; /* <--- AQUÍ QUITAMOS EL CONTORNO */
+        border-radius: 0px !important;
+        font-family: 'Courier Prime', monospace !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+        transition: background-color 0.3s ease !important;
+    }}
+
+    /* EFECTO HOVER SUTIL */
+    div.stButton > button:hover {{
+        background-color: #e0e0e0 !important; /* Un gris un poco más oscuro al pasar el mouse */
+        color: #000000 !important;
+    }}
+
+    /* 2. FORZAR TEXTO NEGRO INCLUSO EN MODO OSCURO */
+    div.stButton > button p {{
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+    }}
+
+    /* Asegurar que el texto no cambie en hover si no queremos inversión */
+    div.stButton > button:hover p {{
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+    }}
+  /* 1. RESET TOTAL: El logo y nombre se quedan anclados donde van */
+        .block-container {{
+            padding-top: 3.5rem !important; 
         }}
 
-        /* 2. BLINDAJE DE PROPORCIÓN */
-        div.stButton > button:not(:has(p)) {{
-            width: 100% !important;
-            /* Proporción 19:28 aproximada (0.68) */
-            aspect-ratio: 19 / 28 !important; 
+        /* 2. SOLO CELULAR (AQUÍ OCURRE LA MAGIA) */
+        @media (max-width: 768px) {{
+            /* Quitamos el aire entre columnas solo en móvil */
+            [data-testid="stHorizontalBlock"] {{
+                gap: 0px !important;
+            }}
+
+            /* Succionamos el contenido de la columna hacia la línea técnica */
+            [data-testid="stHorizontalBlock"] div[data-testid="column"] {{
+                margin-top: -45px !important; 
+            }}
             
-            /* BLOQUEO ABSOLUTO */
-            height: auto !important;
-            min-height: 1px !important; 
-            /* Calculamos un máximo basado en el ancho del cel (aprox 160-200px) */
-            max-height: 280px !important; 
-            
-            background-size: cover !important;
-            background-position: center !important;
-            border: 1px solid #eee !important;
-            margin-bottom: 2px !important;
-            padding: 0px !important;
+            /* Mantenemos el aire del encabezado para que el logo no baile */
+            [data-testid="stVerticalBlock"] {{
+                gap: 1rem !important; 
+            }}
         }}
-        
-        /* 3. Ajuste de textos compacto */
-        div[style*="font-family: 'Courier Prime'"] {{
-            padding-top: 5px !important;
-        }}
-        
-        div[style*="font-family: 'Courier Prime'"] p {{
-            font-size: 0.60rem !important; /* Un poco más pequeño para evitar saltos de línea */
-            line-height: 1.0 !important;
-            margin: 1px 0 !important;
-        }}
-    }}
     </style>
     """, unsafe_allow_html=True)
 
-# SECCIÓN 3: CABECERA (LOGO SUPERIOR Y REDES)
+# -----------------------------------------------------------------
+# INYECCIÓN DE RESPONSIVIDAD (SOLO CELULAR) - MOVIMIENTO FORZADO
+# -----------------------------------------------------------------
+st.markdown('''
+<style>
+    @media (max-width: 768px) {
+        /* 1. CENTRAR LOGO */
+        #contenedor-logo-said img {
+            margin: 0 auto !important;
+        }
+
+        /* 2. MOVER ESTUDIO DE ARTE (Ajuste fino) */
+        #texto-tecnico {
+            position: relative !important;
+            top: -5px !important;      /* Sube o baja el texto */
+            left: -35px !important;    /* MUEVE A LA IZQUIERDA O DERECHA */
+            width: 100vw !important;
+            margin-left: -15px !important; /* Compensa el padding de Streamlit */
+        }
+
+        /* 3. SUBIR REDES SOCIALES (¡Aquí es donde las jalas!) */
+        #redes-movil {
+            position: relative !important;
+            margin-top: -120px !important; /* ESTE VALOR NEGATIVO LAS SUBE */
+            align-items: center !important;
+            width: 100% !important;
+        }
+        
+        #redes-movil div {
+            justify-content: center !important;
+        }
+        
+        #redes-movil .txt-redes {
+            text-align: center !important;
+            width: 100% !important;
+        }
+</style>
+''', unsafe_allow_html=True)
+
+# SECCIÓN 3: CABECERA (TU CÓDIGO SIGUE IGUAL ABAJO)
 # -----------------------------------------------------------------
 st.markdown('<div class="banner-envios">ENVÍOS NACIONALES E INTERNACIONALES - TRATO DIRECTO CON EL ARTISTA </div>', unsafe_allow_html=True)
+#st.info("✨ **OFERTA DE COLECCIÓN:** Adquiere las 4 acuarelas originales de la serie *'Destellos del más allá'* por solo **$10,000 MXN**. Envío incluido.")
 
-# BANNER DE OFERTA ESPECIAL (DESTELLOS DEL MÁS ALLÁ)
-st.info("✨ **OFERTA DE COLECCIÓN:** Adquiere las 4 acuarelas originales de la serie *'Destellos del más allá'* por solo **$10,000 MXN**. Envío incluido.")
-
-# REDUCIMOS EL ESPACIO ENTRE COLUMNAS (gap)
-c1, c2, c3 = st.columns([1.2, 4, 0.8], gap="small") 
+c1, c2, c3 = st.columns([1.2, 4, 1], gap="small") 
 
 with c1:
     if logo_main_b64:
         st.markdown(f'''
-            <div style="margin-top: 0px; padding-top: 0px;">
+            <div id="contenedor-logo-said" style="margin-top: 0px; padding-top: 0px;">
                 <img src="data:image/png;base64,{logo_main_b64}" 
-                     style="width: 250px; filter: brightness(0); display: block; margin-top: 0px;">
+                     style="width: 250px; filter: brightness(0); display: block; margin: 0 auto;">
             </div>
         ''', unsafe_allow_html=True)
-    
-    # --- AJUSTE DE ALINEACIÓN AQUÍ ---
-    # CAMBIAMOS EL MARGEN PARA SUBIR O BAJAR EL TEXTO Y QUE CUADRE CON EL BUSCADOR
-    st.markdown("<p style='color:#000000; font-family:Courier Prime; font-size:0.6rem; font-weight:bold; margin-top: 0px; letter-spacing:1px;'>ESTUDIO DE ARTE / CDMX / 2026</p>", unsafe_allow_html=True)
 
+    # LE PUSIMOS EL ID "texto-tecnico"
+    st.markdown("<p id='texto-tecnico' style='color:#000000; font-family:Courier Prime; font-size:0.6rem; font-weight:bold; margin-top: 0px; letter-spacing:1px; text-align:center;'>ESTUDIO DE ARTE / CDMX / 2026</p>", unsafe_allow_html=True)
+
+# --- COLÓCALO ARRIBA DE LA SECCIÓN 4.0 ---
 with c2:
-    # --- AJUSTE DE ALTURA AQUÍ ---
-    # Aumenta el número (ej. 30px, 35px) para bajar la barra más
-    st.markdown("<div style='margin-top: 60px;'>", unsafe_allow_html=True) 
-    
-    filtro_busq = st.text_input(
-        "", 
-        placeholder="ESCRIBE PARA BUSCAR...", 
-        key="search", 
-        label_visibility="collapsed"
-    ).lower()
-    
+    st.markdown("<div id='contenedor-buscador-said' style='margin-top: 55px;'>", unsafe_allow_html=True)
+    # Usamos st.session_state para que el valor no se pierda al recargar
+    busqueda_input = st.text_input("", placeholder="ESCRIBE PARA BUSCAR...", key="main_search").lower().strip()
     st.markdown("</div>", unsafe_allow_html=True)
 
 with c3:
-    # --- AJUSTE DE ALTURA PARA ICONOS ---
-    # Se usa la URL completa para que TikTok e Instagram abran fuera de tu web
-    redes_html = f'<div style="display: flex; justify-content: flex-end; gap: 20px; margin-top: 52px; z-index: 9999;">'
-    
-    # WHATSAPP (Cambia las X por tu número)
-   # Mensaje general para el botón de arriba
-    msg_gral = "Hola Said, visité tu galería web y me gustaría ponerme en contacto contigo.".replace(" ", "%20")
-    redes_html += f'<a href="https://wa.me/5215610810026?text={msg_gral}" target="_blank"><img src="data:image/png;base64,{icon_wa_b64}" style="width:18px; filter:brightness(0);"></a>'
-    
-    # INSTAGRAM
-    redes_html += f'<a href="https://www.instagram.com/saidmontano_/" target="_blank"><img src="data:image/png;base64,{icon_ig_b64}" style="width:18px; filter:brightness(0);"></a>'
-    
-    # TIKTOK (Protocolo completo https://www para evitar error)
-    redes_html += f'<a href="https://www.tiktok.com/@saidmontano_" target="_blank"><img src="data:image/png;base64,{icon_tk_b64}" style="width:18px; filter:brightness(0);"></a>'
-    
-    st.markdown(redes_html + '</div>', unsafe_allow_html=True)
-
-
+    msg_gral = "Hola Said, visité tu galería web...".replace(" ", "%20")
+    # LE PUSIMOS EL ID "redes-movil"
+    redes_html = f'''
+    <div id="redes-movil" class="contenedor-redes" style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px; margin-top: 52px;">
+        <div style="display: flex; gap: 40px;">
+            <a href="https://wa.me/5215610810026?text={msg_gral}" target="_blank"><img src="data:image/png;base64,{icon_wa_b64}" style="width:18px; filter:brightness(0);"></a>
+            <a href="https://www.instagram.com/saidmontano_/" target="_blank"><img src="data:image/png;base64,{icon_ig_b64}" style="width:18px; filter:brightness(0);"></a>
+            <a href="https://www.tiktok.com/@saidmontano_" target="_blank"><img src="data:image/png;base64,{icon_tk_b64}" style="width:18px; filter:brightness(0);"></a>
+        </div>
+        <span class="txt-redes" style="color:#000; font-family:Courier Prime; font-size:0.6rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">CONTACTO</span>
+    </div>
+    '''
+    st.markdown(redes_html, unsafe_allow_html=True)
 
 # LÍNEA EXTRA DE SEGURIDAD
 st.markdown("<br>", unsafe_allow_html=True)
@@ -350,38 +386,35 @@ VELOCIDAD = "8s"          # Más lento para que el usuario pueda leer mientras s
 
 
 
-# 3.3 SELECCIÓN DE TÉCNICAS (ELIMINACIÓN DE RESTRICCIONES DE STREAMLIT)
-st.markdown('''
-    <style>
-    /* ATACAMOS EL CONTENEDOR QUE DA EL ESPACIO AUTOMÁTICO */
-    [data-testid="stVerticalBlock"] > div:has(div[data-testid="stRadio"]) {
-        margin-top: -73px !important; /* <--- AJUSTA ESTO PARA SUBIR O BAJAR */
-        margin-bottom: -20px !important;
-    }
-    
-    /* ASEGURAMOS QUE EL RADIO SEA HORIZONTAL */
-    div[data-testid="stRadio"] > div {
-        flex-direction: row !important;
-        flex-wrap: wrap;
-    }
-    </style>
-''', unsafe_allow_html=True)
+# 3.3 NAVEGACIÓN TÉCNICA (LIMPIEZA FINAL)
+opciones = ["NUEVAS", "PINTURA AL OLEO", "ACUARELA", "DIBUJO", "ARTE DIGITAL", "ESCULTURA", "ESTUDIO"]
+tecnica_actual = st.session_state.get('tec_ref', opciones[0])
 
-opciones = ["PINTURA AL OLEO", "ACUARELA", "DIBUJO","ARTE DIGITAL", "ESCULTURA", "ESTUDIO"]
-idx_tec = opciones.index(st.session_state.tec_ref) if st.session_state.tec_ref in opciones else 0
+botones_html = ""
+for opcion in opciones:
+    clase = "opcion-activa" if opcion == tecnica_actual else "opcion-inactiva"
+    botones_html += f'<div class="{clase} nav-item" onclick="window.parent.postMessage({{type: \'streamlit:setComponentValue\', value: \'{opcion}\', key: \'hidden_nav\'}}, \'*\')">{opcion}</div>'
 
-tecnica_sel = st.radio("", opciones, index=idx_tec, horizontal=True, label_visibility="collapsed")
+#:::::::::::::::::::::::::::::::::::::::::::::::::##
+# 3.4 RECEPTOR FÍSICO (PERO INVISIBLE)
+tecnica_sel = st.radio(
+    "receptor_tecnica", # El nombre que busca el JS arriba
+    options=opciones,
+    key="hidden_nav",
+    index=opciones.index(st.session_state.tec_ref) if st.session_state.tec_ref in opciones else 0,
+    label_visibility="collapsed"
+)
 
-# Si cambias de técnica, reseteamos página y guardamos en URL
+# Sincronización manual inmediata
 if tecnica_sel != st.session_state.tec_ref:
     st.session_state.tec_ref = tecnica_sel
-    st.session_state.pag_ref = 0
-    st.query_params["t"] = tecnica_sel
-    st.query_params["p"] = 0
+    st.session_state.obras_visibles = 8
+    st.session_state.limpiar_fantasma = True # <--- AGREGA ESTA LÍNEA 
     st.rerun()
+    
+#:::::::::::::::::::::::::::::::::::::::::::::::::##
 
-
-# --- 3.4 DESPLEGABLE CON FOTO (ESTRUCTURA RÍGIDA AJUSTABLE) ---
+# --- 3.4 DESPLEGABLE CON FOTO (VERSIÓN CELULAR OPTIMIZADA) ---
 import base64
 import os
 from pathlib import Path
@@ -402,7 +435,7 @@ foto_b64 = get_image_base64_ultimate()
 
 st.markdown('''
     <style>
-    /* 1. BARRA GRIS TOTAL */
+    /* 1. BARRA BLANCA TOTAL */
     .stExpander {
         border: none !important;
         background-color: #FFFFFF !important; 
@@ -428,287 +461,500 @@ st.markdown('''
 
     /* 3. CONTENEDOR DE LA BIO */
     [data-testid="stExpanderDetails"] {
-        background-color: #D3D3D3 !important;
-        padding: 25px 0px !important; 
+        background-color: #F8F8F8 !important; 
+        padding: 40px 0px !important; 
     }
 
-    .tabla-bio {
-        background-color: #FFFFFF !important;
-        margin: 0 auto !important;
-        padding: 45px !important;
-        
-        /* --- ETIQUETA DE EDICIÓN: ANCHO_RECTANGULO_BLANCO --- */
-        /* Sube este % para expandir más el cuadro blanco a los lados */
-        width: 100% !important; 
-        
-        max-width: 1400px !important; /* Límite para pantallas muy grandes */
-        border-collapse: separate;
-        border-spacing: 30px 0px;
+    /* ESTILOS DE ESCRITORIO (PC) */
+    .contenedor-foto {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .foto-perfil {
+        width: 160px;
+        height: 160px;
+        object-fit: cover;
+        border: none;
+    }
+
+    .texto-bio-ajustado {
+        color: #000000;
+        font-family: 'Courier Prime', monospace;
+        font-size: 0.8rem;
+        text-align: left;
+        line-height: 1.7;
+        padding-right: 40px;
+        padding-left: 0px; /* En PC va pegado a la foto */
+    }
+
+    /* --- AJUSTES EXCLUSIVOS PARA CELULAR --- */
+    @media (max-width: 768px) {
+        .contenedor-foto {
+            justify-content: center !important;
+            margin-bottom: 30px; /* Más espacio entre foto y texto */
+        }
+        .foto-perfil {
+            width: 150px;
+            height: 150px;
+        }
+        .texto-bio-ajustado {
+            padding-left: 25px !important;  /* <--- EL ESPACIO QUE BUSCABAS */
+            padding-right: 25px !important; /* Equilibrio en ambos lados */
+            font-size: 0.85rem !important;   /* Un pelín más grande para legibilidad en móvil */
+        }
     }
     </style>
 ''', unsafe_allow_html=True)
 
 with st.expander("SOBRE EL ARTISTA"):
-    # Creamos dos columnas. En celular, Streamlit las apila solas si no forzamos el CSS anterior.
-    col_foto, col_texto = st.columns([1, 3])
+    col_foto, col_espacio, col_texto, col_final = st.columns([1.2, 0.1, 4, 1.2])
     
     with col_foto:
-        # Foto circular centrada
         foto_url = "https://raw.githubusercontent.com/artsades/galeria-said-montano/main/said_perfil.jpg"
         st.markdown(f'''
-            <div style="text-align: center; margin-bottom: 20px;">
-                <img src="{foto_url}" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 2px solid #eeeeee;">
+            <div class="contenedor-foto">
+                <img src="{foto_url}" class="foto-perfil">
             </div>
         ''', unsafe_allow_html=True)
     
     with col_texto:
-        # Texto en negro que se ajusta al ancho disponible
+        # Usamos la nueva clase texto-bio-ajustado
         st.markdown("""
-            <div style="color: #000000; font-family: 'Courier Prime', monospace; font-size: 16px; text-align: left; line-height: 1.6;">
-                Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistente, construyendo escenas figurativas de alta carga simbólica. A través de una estética oscura, el cuerpo humano aparece fragmentado, intervenido o integrado dentro de estructuras que regulan identidad, control y pertenencia.
+            <div class="texto-bio-ajustado">
+                Said Montaño es un artista visual mexicano cuya práctica se centra principalmente en la pintura al óleo sobre lienzo. Su trabajo explora estados emocionales contenidos y tensiones psicológicas que operan de forma silenciosa y persistentente, construyendo escenas figurativas de alta carga simbólica. A través de una estética oscura, el cuerpo humano aparece fragmentado, intervenido o integrado dentro de estructuras que regulan identidad, control y pertenencia.
                 <br><br>
                 Paralelamente a su producción pictórica, el artista ha desarrollado una línea escultórica que mantiene el mismo lenguaje oscuro y personal, explorando la materialidad del cuerpo y sus restos como símbolos de permanencia, desgaste y memoria. Su trabajo escultórico ha sido seleccionado de manera consecutiva en cinco ediciones dentro de plataformas nacionales de exhibición, consolidando una identidad visual coherente en contextos de alta visibilidad sin diluir su discurso.
             </div>
         """, unsafe_allow_html=True)
+
+
     
 # LÍNEA EXTRA DE SEGURIDAD PARA LA GALERÍA
 st.write("")
 
 
 
-#===SECCION DE LAS OBRAS=====
-# 4.0 LECTURA Y CONTROL DE DATOS [cite: 2026-03-02]
+#===SECCION DE LAS OBRAS FILTRADO DE TECNICAS =====
+#=== SECCION DE LAS OBRAS FILTRADO DE TECNICAS =====
+# 4.0 LECTURA Y CONTROL DE DATOS
 archivos_csv = [f for f in os.listdir('.') if f.endswith('.csv')]
 
 if archivos_csv:
-    # PERSISTENCIA DE DATOS [cite: 2026-03-02]
     if 'datos_master' not in st.session_state:
+        # En la Sección 4.0, asegúrate de que el bloque de error esté así:
         try:
-            st.session_state.datos_master = pd.read_csv(archivos_csv[0], encoding='latin1')
+            st.session_state.datos_master = pd.read_csv(archivos_csv[0], encoding='utf-8-sig')
         except:
-            st.session_state.datos_master = pd.read_csv(archivos_csv[0], encoding='utf-8')
+            # El errors='replace' es el que evita que el celular se confunda
+            st.session_state.datos_master = pd.read_csv(archivos_csv[0], encoding='latin-1', errors='replace')
+        
         st.session_state.datos_master.columns = [c.lower().strip() for c in st.session_state.datos_master.columns]
 
-    # 4.1 FILTRADO INTELIGENTE (Prioridad a Series) [cite: 2026-03-05]
-    df_f = st.session_state.datos_master.copy().dropna(subset=['tecnica'])
-
-    # SEPARACIÓN POR SECCIÓN (Said Montaño)
+    # 1. Copia de trabajo
+    df_f = st.session_state.datos_master.copy()
+    
+    # 2. Definimos seccion_actual siempre
     seccion_actual = "proceso" if "ESTUDIO" in tecnica_sel.upper() else "galeria"
-    df_f = df_f[df_f['seccion'] == seccion_actual]
+    
+    # 3. Limpieza profunda (ESTO ARREGLA LOS ACENTOS EN PANTALLA)
+    cols_check = ['titulo', 'tecnica', 'tags', 'descripcion', 'serie']
+    for col in cols_check:
+        if col in df_f.columns:
+            # Forzamos la limpieza de texto para que no salgan símbolos raros
+            df_f[col] = df_f[col].fillna('').astype(str).str.strip()
+            # Creamos una versión en minúsculas solo para el buscador interno
+        else:
+            df_f[col] = ""
 
-    # 1. FILTRO DE BÚSQUEDA INTEGRAL (Título, Serie, Descripción y Tags)
-    if filtro_busq:
-        df_f = df_f[df_f.apply(lambda r: 
-            filtro_busq in str(r.get('titulo','')).lower() or 
-            filtro_busq in str(r.get('descripcion','')).lower() or
-            filtro_busq in str(r.get('serie','')).lower() or
-            filtro_busq in str(r.get('tags','')).lower(), 
-            axis=1)]
+    # 4. LÓGICA DE BÚSQUEDA (Mantenemos la robusta que ya funcionaba)
+    if busqueda_input:
+        import re
+        patron = r'\b' + re.escape(busqueda_input.lower())
+        # Buscamos en minúsculas pero mostramos el texto original con acentos
+        super_string = df_f[cols_check].apply(lambda x: ' '.join(x).lower(), axis=1)
+        mask = super_string.str.contains(patron, regex=True, na=False)
+        df_f = df_f[mask]
+        titulo_seccion = f"RESULTADOS: {busqueda_input.upper()}"
+    else:
+        # Pestañas normales
+        titulo_seccion = tecnica_sel
+        # ... (aquí sigue tu código de filtrado por seccion_actual y MAPEO_DATOS)
 
-    # FILTRADO DIRECTO POR TÉCNICA
-    palabra_clave = tecnica_sel.split()[-1].upper()
-    if palabra_clave != "OBRAS": 
-        df_f = df_f[df_f['tecnica'].str.upper().str.contains(palabra_clave, na=False)]
-    if not df_f.empty:
-        # --- LÓGICA DE PÁGINAS ESTABLE [cite: 2026-03-02] ---
-        OBRAS_POR_PAGINA = 10
-        total_paginas = (len(df_f) // OBRAS_POR_PAGINA) + (1 if len(df_f) % OBRAS_POR_PAGINA > 0 else 0)
+    # 3. Aplicamos la búsqueda global (FLEXIBLE Y ROBUSTA)
+    # 3. Aplicamos la búsqueda global (FLEXIBLE Y ROBUSTA)
+    if busqueda_input:
+        import re
+        patron = r'\b' + re.escape(busqueda_input.lower())
         
-        # Anclamos la página para que no desaparezca al volver a la 1
-        if 'pag_ref' not in st.session_state: st.session_state.pag_ref = 0
-        if st.session_state.pag_ref >= total_paginas: st.session_state.pag_ref = 0
+        # Validamos que df_f no esté vacío antes de procesar
+        if not df_f.empty:
+            # Unimos las columnas clave
+            super_string = df_f[cols_check].astype(str).apply(lambda x: ' '.join(x), axis=1).str.lower()
+            
+            # PROTECCIÓN: Si por alguna razón super_string no es una serie de strings, 
+            # o si el filtro inicial vació el DF, validamos aquí:
+            if not super_string.empty:
+                mask = super_string.str.contains(patron, regex=True, na=False)
+                df_f = df_f[mask]
         
-        datos_galeria = df_f.iloc[st.session_state.pag_ref * OBRAS_POR_PAGINA : (st.session_state.pag_ref + 1) * OBRAS_POR_PAGINA]
+        # Variable crítica para que el encabezado funcione
+        titulo_seccion = f"RESULTADOS: {busqueda_input.upper()}"
+        # --- MENSAJE DE BÚSQUEDA CON ANCLAJE SEGURO ---
+        mensaje_html = ""
+        if busqueda_input and df_f.empty:
+            mensaje_html = f"""
+                <div style="width: 100%; text-align: center; margin-top: 80px; margin-bottom: 80px; font-family: 'Courier Prime', monospace;">
+                    <p style="font-size: 0.9rem; color: #000; letter-spacing: 2px; text-transform: uppercase; font-weight: bold;">
+                        No se encontraron piezas para: <br>
+                        <span style="color: #B50095; font-size: 1.1rem; border-bottom: 1px solid #B50095;">"{busqueda_input.upper()}"</span>
+                    </p>
+                </div>
+            """
 
-        # --- FILA DE TÍTULO Y CONTADOR ---
-        total_obras_tec = len(df_f)
-        inicio_rango = (st.session_state.pag_ref * OBRAS_POR_PAGINA) + 1
-        fin_rango = min((st.session_state.pag_ref + 1) * OBRAS_POR_PAGINA, total_obras_tec)
+        # El secreto: siempre renderizamos un markdown, aunque esté vacío
+        # Esto evita que React intente "remover" el componente y truene
+        st.markdown(f'<div id="ancla-mensajes">{mensaje_html}</div>', unsafe_allow_html=True)
+    else:
+        # Pestañas normales
+        titulo_seccion = tecnica_sel
+        # ... resto de tu else (seccion_actual, MAPEO_DATOS, etc.)
+        if 'seccion' in df_f.columns:
+            df_f = df_f[df_f['seccion'] == seccion_actual]
 
+        MAPEO_DATOS = {
+            "NUEVAS": "OBRAS",
+            "PINTURA AL OLEO": "pintura al oleo",
+            "ACUARELA": "acuarela",
+            "DIBUJO": "dibujo",
+            "ARTE DIGITAL": "arte digital",
+            "ESCULTURA": "escultura"
+        }
+        valor_csv = MAPEO_DATOS.get(tecnica_sel, "OBRAS")
+        if valor_csv != "OBRAS" and seccion_actual != "proceso":
+            df_f = df_f[df_f['tecnica'].str.contains(valor_csv.lower())]
+
+    # ESTA ES LA ASIGNACIÓN FINAL. NO DEBE HABER OTRA DESPUÉS.
+    datos_galeria = df_f
+    
+    if not datos_galeria.empty:
+        total_obras_tec = len(datos_galeria)
+        obras_reales = min(st.session_state.obras_visibles, total_obras_tec)
+
+        # 1. ENCABEZADO (Línea gris con contador)
         st.markdown(f"""
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #eeeeee; padding-bottom: 10px; margin-top: -38px; font-family: 'Courier Prime';">
+            <div style="
+                display: flex; 
+                justify-content: space-between; 
+                align-items: flex-end; 
+                border-bottom: 1px solid #eeeeee; 
+                padding-bottom: 10px; 
+                margin-top: -30px;  /* <--- Súbelo a -60px si es necesario */
+                position: relative; 
+                z-index: 10;
+                background: white; 
+                font-family: 'Courier Prime';
+            ">
                 <p style="margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 3px; color: #000;">{tecnica_sel}</p>
-                <p style="margin: 0; font-size: 0.7rem; letter-spacing: 1px; color: #888;">MOSTRANDO {inicio_rango}-{fin_rango} DE {total_obras_tec} OBRAS</p>
+                <p style="margin: 0; font-size: 0.7rem; letter-spacing: 1px; color: #888;">MOSTRANDO {obras_reales} DE {total_obras_tec} OBRAS</p>
             </div>
         """, unsafe_allow_html=True)
+
+        # 2. DEFINICIÓN DE LA FUNCIÓN (8 espacios de sangría)
+        def mostrar_ficha_tecnica(id_ref, sufijo=""):
+            # Refuerzo de scroll al inicio de la función
+            st.components.v1.html("<script>window.parent.document.querySelector('section.main').scrollTo(0, 0);</script>", height=0)
+            import textwrap
+            import re
             
-        # VARIABLES DE DISEÑO ORIGINAL [cite: 2026-02-27]
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        ALTO_OBRA = "500px" 
-        T_PRECIO = "1.2rem"
-        SIZE_FIRMA_MODAL = "140px" 
-        FUENTE_INDUSTRIAL = "'Courier Prime', monospace"
-        C_FONDO_MODAL = "#FFFFFF"
-        
-        # --- FUNCIÓN GLOBAL DEL VISOR ---
-        @st.dialog(" ", width="large")
-        def visor_galeria(id_ref):
-            st.markdown(f'<div style="display:flex; justify-content:space-between;"><div style="font-family:Courier Prime; font-size:0.7rem;">ARCHIVO VISUAL</div><img src="data:image/png;base64,{logo_main_b64}" style="width:100px; filter:brightness(0);"></div><hr>', unsafe_allow_html=True)
+            # ESTO SUBE LA PÁGINA AUTOMÁTICAMENTE AL ABRIR
+            st.markdown('<script>window.parent.document.querySelector(".main").scrollTo(0,0);</script>', unsafe_allow_html=True)
+            
+            try:
+                r = datos_galeria[datos_galeria['id_unico'].astype(str).str.contains(str(id_ref))].iloc[0]
+            except:
+                return
+
+            # --- NUEVA FUNCIÓN INTERNA DE LIMPIEZA PARA EL CELULAR ---
+            def limpiar_txt(txt):
+                t = str(txt)
+                # DICCIONARIO PARA CARACTERES Y COMILLAS BASURA
+                reemplazos = {
+                    'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+                    'Ã±': 'ñ', 'Ã': 'Á', 'Ã‰': 'É', 'Ã\xcd': 'Í', 'Ã“': 'Ó',
+                    'Ãš': 'Ú', 'Ã‘': 'Ñ',
+                    # --- ESTO ARREGLA LAS COMILLAS RARAS ---
+                    'â€œ': '"', 'â€ ': '"', 'â€"': '-', 'â€¦': '...',
+                    'â€': '"', 'â€˜': "'", 'â€™': "'"
+                }
+                for roto, sano in reemplazos.items():
+                    t = t.replace(roto, sano)
+                return t
+
+            # --- APLICAMOS LA LIMPIEZA A LOS CAMPOS CRÍTICOS ---
+            titulo_obra = limpiar_txt(r.get("titulo", "S/T"))
+            descripcion_obra = limpiar_txt(r.get("descripcion", "Sin descripción."))
+            tecnica_obra = limpiar_txt(r.get("tecnica", ""))
+
+            # Preparación de links y precios
+            val_p = str(r.get('precio', '0'))
+            solo_n = re.sub(r'[^0-9.]', '', val_p)
+            try: precio_f = f"${float(solo_n):,.0f} MXN"
+            except: precio_f = "CONSULTAR PRECIO"
+    
+            # Nota que aquí ya usamos el titulo_obra que ya fue limpiado arriba
+            link_paypal = f"https://www.paypal.me/Saidmc/{solo_n}MXN"
+            msj_wa = f"Hola Said, me interesa la obra: {titulo_obra}".replace(" ", "%20")
+            link_wa = f"https://wa.me/5215610810026?text={msj_wa}"
+            # --- HACK DE SCROLL DEFINITIVO ---
+            f_scroll = """
+                <img src="x" onerror="
+                    setTimeout(function() {
+                        var mainContainer = window.parent.document.querySelector('section.main');
+                        if (mainContainer) {
+                            mainContainer.scrollTo({top: 0, behavior: 'auto'});
+                        }
+                    }, 50);
+                " style="display:none;">
+                <div id="top_anchor"></div>
+            """
+            # 1. BOTONES DE CIERRE (Superiores)
+            _, col_cierre_btn = st.columns([0.85, 0.15])
+            with col_cierre_btn:
+                if st.button("CERRAR ✕", key=f"btn_cerrar_{id_ref}_{sufijo}"):
+                    st.query_params.clear()
+                    st.rerun()
+
+            # 2. FICHA TÉCNICA Y BOTONES DE COMPRA (Lo primero que se ve)
+            ficha_raw = f'''
+                <div style="background-color:white; color:black; font-family:'Courier Prime',monospace; padding:20px; border:1px solid #eee; margin-bottom:40px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid black; padding-bottom:10px; margin-bottom:30px;">
+                        <span style="font-size:0.7rem; letter-spacing:2px; color:black;">ARCHIVO VISUAL / DETALLES</span>
+                        <img src="data:image/png;base64,{logo_main_b64}" style="width:120px; filter:brightness(0);">
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-bottom: 30px;">
+                        <a href="{link_paypal}" target="_blank" style="flex:1; text-align:center; text-decoration:none; font-family:'Courier Prime',monospace; font-weight:bold; border:1px solid #000; text-transform:uppercase; letter-spacing:4px; background-color:#000; color:#fff; font-size:0.8rem; padding:10px 0;">💳COMPRA-PAYPAL</a>
+                        <a href="{link_wa}" target="_blank" style="flex:1; text-align:center; text-decoration:none; font-family:'Courier Prime',monospace; font-weight:bold; border:1px solid #000; text-transform:uppercase; letter-spacing:4px; background-color:#000; color:#fff; font-size:0.8rem; padding:10px 0;">💬COMPRA-WHATSAPP</a>
+                    </div>
+                    <h2 style="font-size:1.8rem; font-weight:bold; margin:0; text-transform:uppercase; color:black;">{titulo_obra}</h2>
+                    <p style="font-size:0.9rem; color:#666; margin:5px 0 20px 0; letter-spacing:2px;">SERIE: {str(r.get("serie", "S/S")).upper()}</p>
+                    <div style="border-left:2px solid black; padding-left:20px; margin:20px 0;">
+                        <p style="font-size:1rem; margin:5px 0; color:black;"><b>TÉCNICA:</b> {str(r.get("tecnica", "")).upper()} SOBRE {str(r.get("soporte", "")).upper()}</p>
+                        <p style="font-size:1rem; margin:5px 0; color:black;"><b>MEDIDAS:</b> {r.get("medidas", "")}</p>
+                        <p style="font-size:1.1rem; margin:15px 0 5px 0; font-weight:bold; color:black;">{precio_f} <span style="font-size:0.7rem; color:#888;">[{str(r.get("disponibilidad", "EN VENTA")).upper()}]</span></p>
+                    </div>
+                    <p style="font-size:1rem; line-height:1.6; text-align:justify; margin-top:25px; color:black;">{descripcion_obra}</p>
+                </div>
+            '''
+            st.markdown(textwrap.dedent(ficha_raw), unsafe_allow_html=True)
+
+            # 3. IMÁGENES (Van después de la ficha)
             st.image(f"assets/{id_ref}.jpg", use_container_width=True)
             for d in range(1, 6):
                 if os.path.exists(f"assets/{id_ref}_det_{d}.jpg"):
                     st.image(f"assets/{id_ref}_det_{d}.jpg", use_container_width=True)
             
-            # --- AGREGA ESTO AQUÍ ABAJO (Mantenla alineada a la izquierda dentro del def) ---
-            if st.button("VOLVER A LA GALERÍA", use_container_width=True):
+            # Botón de cierre inferior
+            if st.button("VOLVER A LA GALERÍA ↑", key=f"btn_volver_{id_ref}_{sufijo}", use_container_width=True):
                 st.query_params.clear()
                 st.rerun()
+                st.rerun()
+            st.markdown("---")
+            # 3. DISPARADOR (Se activa si hay una obra en la URL)
 
-        # Aquí sigue tu código de las columnas igual...
-        cols = st.columns(5, gap="medium")
-        for i, (idx, row) in enumerate(datos_galeria.iterrows()):
-            with cols[i % 5]:
-                id_obra = str(row.get('id_unico')).split('.')[0]
-                ruta_img = f"assets/{id_obra}.jpg"
-                
+        # 4. MOTOR DE LA GALERÍA (Prepara las fotos)
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        obras_a_mostrar = datos_galeria.head(st.session_state.obras_visibles)
+        
+        # Contenedor de la cuadrícula
+        st.markdown('<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0px 80px;">', unsafe_allow_html=True)
+        
+        # VARIABLES DE DISEÑO (Tus variables actuales + estas nuevas)
+        ALTO_OBRA = "500px" 
+        T_PRECIO = "1.2rem"
+        SIZE_FIRMA_MODAL = "140px" 
+        FUENTE_INDUSTRIAL = "'Courier Prime', monospace"
+        C_FONDO_MODAL = "#FFFFFF"
+
+        # --- AÑADE ESTAS DOS PARA LA FICHA ---
+        T_TITULO = "0.85rem"
+        T_DETALLE = "0.65rem"
+ ##================nuevo==========================#
+
+        # AQUÍ EMPIEZA TU BUCLE "for i, (idx, row) in enumerate..."
+# --- 1. FILTRADO POR BUSCADOR (Hazlo aquí primero) ---
+
+       # --- 2. LÓGICA DE FILTRADO DINÁMICO ---
+        id_en_url = st.query_params.get("obra")
+
+        # Si hay una obra seleccionada, el catálogo "desaparece" y solo queda esa obra
+        if id_en_url:
+            obras_a_renderizar = datos_galeria[datos_galeria['id_unico'].astype(str).str.contains(str(id_en_url))].head(1)
+        else:
+            # --- AQUÍ ESTÁ EL CAMBIO PARA LIMITAR A 8 ---
+            if tecnica_sel.upper() == "NUEVAS":
+                obras_a_renderizar = datos_galeria.head(8)
+            else:
+                obras_a_renderizar = datos_galeria.head(st.session_state.obras_visibles)
+
+        # A partir de aquí, tu bucle 'for i, (idx, row) in enumerate...' sigue EXACTAMENTE IGUAL
+
+        # Iniciamos el bucle solo con lo necesario
+        for i, (idx, row) in enumerate(obras_a_renderizar.iterrows()):
+            
+            id_obra = str(row.get('id_unico')).split('.')[0]
+            ruta_img = f"assets/{id_obra}.jpg"
+
+            # --- MODO ENFOQUE (Si hay obra en URL) ---
+            if id_en_url:
+                # Inyección inmediata: Sin columnas, sin espacios, sin residuos
+                st.write("") 
+                mostrar_ficha_tecnica(id_obra, sufijo="enfoque_limpio")
+                st.markdown("<hr style='border-top: 2px solid #000; margin: 40px 0;'>", unsafe_allow_html=True)
+                continue # Finaliza aquí porque solo hay una obra
+
+            # --- MODO GALERÍA NORMAL (Si NO hay obra en URL) ---
+            if i % 4 == 0:
+                cols = st.columns([0.5, 1, 1, 1, 1, 0.5], gap="large")
+            
+            col_target = (i % 4) + 1
+            # ... (Aquí sigue todo tu código de 'with cols[col_target]' igual que antes)
+            
+            with cols[col_target]:
                 if os.path.exists(ruta_img):
-                    # --- CASO A: SI ES ESTUDIO / PROCESO ---
                     if seccion_actual == "proceso":
                         st.image(ruta_img, use_container_width=True)
-                        st.markdown(f'''
-                            <div style="font-family: {FUENTE_INDUSTRIAL}; font-size: 0.65rem; color: #666; margin-top: -10px; line-height: 1.2; padding-bottom: 20px;">
-                                <b style="color:#000;">{row.get('titulo', 'S/T').upper()}</b><br>
-                                {row.get('descripcion', 'Registro de estudio.')}
-                            </div>
-                        ''', unsafe_allow_html=True)
-
-                    # --- CASO B: SI ES GALERÍA COMERCIAL ---
                     else:
-                        # 1. CONVERSIÓN Y LLAVE
                         img_b64 = image_to_base64(ruta_img)
-                        t_key = tecnica_sel.replace(" ", "_")
-
-                        # 2. CSS PARA EL BOTÓN-IMAGEN
+                        v_count = st.session_state.obras_visibles
+                        t_key = f"{tecnica_sel.replace(' ', '_')}_{v_count}"
+                        
                         st.markdown(f"""<style>
                             div.st-key-img_btn_{id_obra}_{t_key} button {{
                                 background-image: url("data:image/jpeg;base64,{img_b64}") !important;
                                 background-size: cover !important;
                                 background-position: center !important;
-                                height: {ALTO_OBRA} !important;
+                                aspect-ratio: 3 / 4 !important;
                                 width: 100% !important;
                                 border: 1px solid #eee !important;
-                                background-color: transparent !important;
                                 border-radius: 0px !important;
+                                background-color: transparent !important;
                             }}
                         </style>""", unsafe_allow_html=True)
 
-                        # 3. EL BOTÓN-IMAGEN
+                        # Busca esta parte en tu bucle for:
                         if st.button("", key=f"img_btn_{id_obra}_{t_key}", use_container_width=True):
-                            st.query_params["obra"] = id_obra # <--- Esto es lo nuevo
-                            st.rerun() # <--- Esto es lo nuevo
+                            st.query_params["obra"] = id_obra 
+                            # --- ESTA LÍNEA SUBE EL SCROLL ANTES DE RECARGAR ---
+                            st.components.v1.html("<script>window.parent.document.querySelector('section.main').scrollTo(0, 0);</script>", height=0)
+                            st.rerun()
+                        
+                        # --- 1. LIMPIEZA DE PRECIO (Lo que ya tenías) ---
+                        p_limpio = str(row.get('precio', '0')).replace('$', '').strip()
+                        try:
+                            precio_formateado = f"{float(p_limpio.replace(',', '')):,.0f}"
+                        except:
+                            precio_formateado = p_limpio
 
-                        # 3.1 ESTE ES EL NUEVO DISPARADOR (Ponlo justo debajo del botón)
-                        if obra_en_url == id_obra:
-                            visor_galeria(id_obra)
+                        # --- 2. PLANCHADO DE TEXTO ---
+                        def limpiar_texto(txt):
+                            t = str(txt)
+                            if 'Ã' in t:
+                                try: return t.encode('latin-1').decode('utf-8')
+                                except: return t
+                            return t
 
-                        # 4. CÁLCULO DE PRECIO
-                        import re
-                        val_p = str(row.get('precio', '0'))
-                        solo_n = re.sub(r'[^0-9.]', '', val_p)
-                        try: precio_f = f"${float(solo_n):,.0f} MXN"
-                        except: precio_f = "CONSULTAR PRECIO"
+                        titulo_f = limpiar_texto(row.get('titulo', 'S/T')).upper()
+                        tecnica_f = limpiar_texto(row.get('tecnica', '')).lower()
+                        medidas_f = limpiar_texto(row.get('medidas', 'N/A')).lower()
+                        estatus_f = limpiar_texto(row.get('disponibilidad', 'en venta')).lower()
 
-                        # 5. FICHA TÉCNICA
-                        st.markdown(f'''
-                        <div style="width: 100%; font-family: {FUENTE_INDUSTRIAL}; text-transform: uppercase; text-align: left; border-top: 1px solid #000; padding-top: 10px; margin-top: -15px;">
-                            <p style="font-size: 1.0rem; color: #000; font-weight: bold; margin: 0;">{row.get('titulo', 'S/T')}</p>
-                            <p style="font-size: 0.7rem; color: #444; margin: 2px 0;">SERIE: {row.get('serie', 'S/S')}</p>
-                            <p style="font-size: 0.75rem; color: #444; margin: 0;">{str(row.get('tecnica', '')).upper()} SOBRE {str(row.get('soporte', '')).upper()}</p>
-                            <p style="font-size: 0.75rem; color: #444; margin: 0;">{row.get('medidas', '')}</p>
-                            <p style="font-size: {T_PRECIO}; color: #000; font-weight: bold; margin-top: 10px;">{precio_f}</p>
-                            <p style="font-size: 0.65rem; font-weight: bold; color: #000; margin-bottom: 10px;">[{str(row.get('disponibilidad', 'EN VENTA')).upper()}]</p>
-                        </div>''', unsafe_allow_html=True)
+                        # --- 3. CONSTRUCCIÓN QUIRÚRGICA DEL HTML (SIN F-STRINGS COMPLEJOS) ---
+                        # Subimos el margen a -30px para que pegue a la foto
+                        html_inicio = f'<div style="width:100%; font-family:{FUENTE_INDUSTRIAL}; border-top:0.5px solid rgba(0,0,0,0.8); padding-top:8px; margin-top:-16px; margin-bottom:10px;">'
+                        html_titulo = f'<p style="font-size:0.9rem; font-weight:bold; margin:0; color:#000;">{titulo_f}</p>'
+                        html_tec_med = f'<p style="font-size:0.8rem; margin:2px 0; color:#666; line-height:1.2;">{tecnica_f}<br><span style="font-size:0.7rem; opacity:0.8;">{medidas_f}</span></p>'
+                        html_precio = f'<p style="font-size:0.85rem; font-weight:bold; margin-top:8px; color:#000;">${precio_formateado} MXN <span style="font-size:0.65rem; font-weight:normal; color:#888;"> [{estatus_f}]</span></p>'
+                        html_fin = '</div>'
 
-                        # 6. BOTÓN DE DETALLES + WHATSAPP (EL QUE YA TENÍAS)
-                        # --- Pega aquí el bloque de las columnas (col_det, col_wa) que arreglamos antes ---
+                        # Unimos todo en una sola variable
+                        f_final = html_inicio + html_titulo + html_tec_med + html_precio + html_fin
 
-                    # --- NUEVO: BOTÓN DE WHATSAPP INTELIGENTE ---
-                    txt_obra = f"Hola Said, me interesa la obra '{row.get('titulo', 'S/T')}' de la serie '{row.get('serie', 'S/S')}'. ¿Sigue disponible?".replace(" ", "%20")
-                    link_wa_obra = f"https://wa.me/5215610810026?text={txt_obra}"
-
+                        # --- 4. RENDERIZADO ---
+                        st.markdown(f_final, unsafe_allow_html=True)
+                        
+        # --- BOTÓN VER MÁS (Fuera del bucle for) ---
+        
+        # ### CAMBIO AQUÍ: Solo entra si NO estamos en la sección "NUEVAS" ###
+        if tecnica_sel.upper() != "NUEVAS":
+            
+            if st.session_state.obras_visibles < len(datos_galeria):
+                st.markdown('<div style="height: 50px;"></div>', unsafe_allow_html=True)
                 
-                    # MODAL DETALLES
-                    # --- FILA DE ACCIONES (VER DETALLES + ICONO WA) ---
-                    # --- REPARACIÓN DEFINITIVA: BOTÓN + ICONO FLOTANTE ---
-                    # Creamos un contenedor relativo para que el icono sepa dónde posicionarse
-                    st.markdown(f'''
-                        <div style="position: relative; width: 100%; margin-top: -15px;">
-                            <div style="width: 85%;">
-                    ''', unsafe_allow_html=True)
+                # Centramos el botón
+                _, col_btn, _ = st.columns([1.2, 0.6, 1.2]) 
+                with col_btn:
+                    if st.button("VER MÁS OBRAS ↓", use_container_width=True):
+                        # 1. Aumentamos las obras visibles
+                        st.session_state.obras_visibles += 8 
+                        
+                        # 2. ACTIVAMOS EL SEGURO ANTI-FANTASMA
+                        st.session_state.limpiar_fantasma = True
+                        
+                        # 3. LIMPIAMOS LA URL
+                        if "obra" in st.query_params:
+                            del st.query_params["obra"]
+                        
+                        # 4. Recargamos limpio
+                        st.rerun()
+# --- BOTÓN FLOTANTE "VOLVER ARRIBA" (CUADRADO Y COMPACTO) ---
+st.markdown("""
+    <a href="#subir" class="scroll-top-btn-square">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </a>
 
-                    # 1. BOTÓN "VER DETALLES"
-                    if st.button("VER DETALLES", key=f"btn_{id_obra}_{idx}", use_container_width=True):
-                        @st.dialog(" ")
-                        def ventana_detalles(r):
-                            st.markdown(f"""<style>[data-testid="stDialogHeader"] {{ display: none !important; }} div[data-testid="stDialog"] div[role="dialog"] {{ background-color: #FFF !important; padding-top: 20px !important; }} .stMarkdown p, .stMarkdown h2, .stMarkdown div {{ color: #000000 !important; font-family: {FUENTE_INDUSTRIAL} !important; }}</style><div style="display: flex; justify-content: flex-end; margin-bottom: 20px;"><img src="data:image/png;base64,{logo_main_b64}" style="width: 140px; filter: brightness(0);"></div><hr style="border-top: 1px solid #000; margin-bottom: 20px;">""", unsafe_allow_html=True)
-                            st.markdown(f"## {r.get('titulo','').upper()}")
-                            st.markdown(f"<div style='text-align: justify;'>{r.get('descripcion','')}</div>", unsafe_allow_html=True)
-                        ventana_detalles(row)
+    <style>
+    .scroll-top-btn-square {
+        position: fixed;
+        bottom: 30px;
+        right: 50px; /* Alineado con el padding-left: 50px de PC */
+        width: 35px;
+        height: 35px;
+        background-color: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 0px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        text-decoration: none;
+        z-index: 9999;
+        transition: all 0.3s ease;
+    }
 
-                    # 2. ICONO WHATSAPP POSICIONADO A LA IZQUIERDA (CASI PEGADO)
-                    txt_obra = f"Hola Said, me interesa la obra '{row.get('titulo', 'S/T')}' de la serie '{row.get('serie', 'S/S')}'. ¿Sigue disponible?".replace(" ", "%20")
-                    link_wa_obra = f"https://wa.me/5215610810026?text={txt_obra}"
+    .scroll-top-btn-square:hover {
+        background-color: rgba(0, 0, 0, 0.8);
+        color: #fff;
+    }
 
-                    st.markdown(f'''
-                            </div>
-                            <a href="{link_wa_obra}" target="_blank" 
-                               style="position: absolute; left: 150px; top: -45px; text-decoration: none;">
-                                <img src="data:image/png;base64,{icon_wa_b64}" 
-                                     style="width: 20px; filter: brightness(0); opacity: 0.8;">
-                            </a>
-                        </div>
-                        <div style="height: 20px;"></div>
-                    ''', unsafe_allow_html=True)
-
-        # SI SE HIZO CLIC, ABRIMOS EL DIALOG
-                    if st.session_state.get('obra_seleccionada') == id_obra:
-                        visor_galeria(id_obra)
-                        st.session_state.obra_seleccionada = None
-
-      # --- BLOQUE DE RESCATE: PAGINADOR TOTAL ---
-try:
-    # 1. Buscamos qué variable tiene las obras (df_f o datos_galeria)
-    obras_para_contar = []
-    if 'df_f' in locals():
-        obras_para_contar = df_f
-    elif 'datos_galeria' in locals():
-        obras_para_contar = datos_galeria
-    
-    # 2. Calculamos páginas
-    n_obras = len(obras_para_contar)
-    n_paginas = (n_obras // 12) + (1 if n_obras % 12 > 0 else 0)
-
-    # 3. Dibujamos solo si hay más de una página
-    if n_paginas > 1:
-        st.markdown('<div style="height: 50px;"></div>', unsafe_allow_html=True)
-        
-        # Estilos (Tu diseño Courier Prime)
-        st.markdown("""<style>
-            div.st-key-pag_final_v3 { clear: both; display: flex; justify-content: center; }
-            div.st-key-pag_final_v3 div[role="radiogroup"] { gap: 30px !important; background: transparent !important; }
-            div.st-key-pag_final_v3 label p { font-family: 'Courier Prime' !important; color: #888 !important; }
-            div.st-key-pag_final_v3 label:has(input:checked) p { color: #000 !important; font-weight: bold !important; text-decoration: underline !important; }
-            div.st-key-pag_final_v3 [data-baseweb="radio"] div::after { display: none !important; }
-        </style>""", unsafe_allow_html=True)
-
-        opciones_v3 = [str(i+1) for i in range(n_paginas)]
-        idx_v3 = st.session_state.get('pag_ref', 0)
-        
-        # Si el índice se pasó del límite (por cambiar de técnica), lo reseteamos
-        if idx_v3 >= n_paginas: idx_v3 = 0
-
-        sel_v3 = st.radio("", opciones_v3, index=idx_v3, horizontal=True, label_visibility="collapsed", key="pag_final_v3")
-        
-        nuevo_v3 = int(sel_v3) - 1
-        if nuevo_v3 != st.session_state.get('pag_ref'):
-            st.session_state.pag_ref = nuevo_v3
-            st.query_params["p"] = nuevo_v3
-            st.rerun()
-except Exception as e:
-    # Si algo falla, el programa sigue vivo y no muestra letras rojas
-    pass
-
-
+    /* AJUSTE PARA MÓVIL (MÁS PEQUEÑO Y AL BORDE) */
+    @media (max-width: 768px) {
+        .scroll-top-btn-square {
+            bottom: 15px;
+            right: 15px; /* Alineado con el padding: 0 15px de móvil */
+            width: 28px;  /* Tamaño reducido */
+            height: 28px;
+            background-color: rgba(0, 0, 0, 0.1); /* Un poco más visible en móvil */
+        }
+        .scroll-top-btn-square svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+    </style>
+""", unsafe_allow_html=True)
 # --- SECCIÓN 5: PIE DE PÁGINA (SUBIDA DE LÍNEA DIVISORIA) ---
 # [cite: 2026-03-02]
 # Ajustamos margin-top de 100px a -20px para eliminar el hueco blanco
@@ -735,163 +981,7 @@ with f2:
 with f3: 
     st.markdown("<p style='text-align:right; color:#000000; font-family:Courier Prime; font-size:0.7rem; margin-top:5px;'>© 2026 - TODOS LOS DERECHOS RESERVADOS</p>", unsafe_allow_html=True)
 
-# 1. DATOS (TEXTO LIMPIO)
-INFO_ESTUDIO_SAID = {
-    "ENVÍOS INTERNACIONALES": "Logística global especializada con seguro de cobertura total. Cada pieza se embala bajo estrictos estándares de conservación en cajas de madera, cartón ultraresistente o empaques técnicos de alta resistencia.",
-    "TRATO DIRECTO CON EL ARTISTA": "La adquisición de piezas se gestiona directamente con el estudio de Said Montaño. Esto garantiza la autenticidad absoluta de la obra y elimina comisiones de intermediarios.",
-    "CÓMO COMPRAR": "1. SELECCIÓN: Elija la pieza de su interés en el catálogo, guarde su nombre y serie si es que pertenece a alguna .<br><br>2. CONSULTA: Verifique disponibilidad y costos de envío (Vía WhatsApp, DM en Instagram, DM Tiktok o correo electrónico: art.sades@gmail.com) .<br><br>3. PAGO: Confirmada la pieza, se emite la factura para pago o se le proporcionan los datos necesarios, segun el tipo de pago.<br><br>4. LOGÍSTICA: Despacho en un lapso de 3 a 5 días hábiles en México. (Si usted requiere el envío fuera de México cunsultelo por via whatsapp, DM instagran, DM tiktok, art.sades@gmail.com).",
-    "OBRA PERSONALIZADA": "Se aceptan proyectos por comisión bajo un análisis previo. Pregunta por via WhatsApp, Instagram, tiktok, art.sades@gmail.com (Se requiere anticipo del 60% )",
-    "MÉTODOS DE PAGO": "Transferencias bancarias (SPEI) y PAY PAL. Se emite factura fiscal o comercial.",
-    "CUIDADOS DE LA OBRA": "• Evite luz solar directa.<br><br>• Humedad controlada.<br><br>• Limpie solo con brocha de pelo suave o microfibra seca.<br><br>• No aplique solventes ni químicos."
-}
 
-# 2. FUNCIÓN DEL CUADRO (MODAL) - ESTRUCTURA DE TABLA PARA FIJAR POSICIONES
-@st.dialog(" ")
-def desplegar_info_servicio(nombre_servicio):
-    descripcion = INFO_ESTUDIO_SAID.get(nombre_servicio, "")
-    
-    st.markdown(f"""
-        <style>
-            [data-testid="stDialogHeader"] {{ display: none !important; }} 
-            div[data-testid="stDialog"] div[role="dialog"] {{ 
-                background-color: white !important; 
-                padding: 30px !important; 
-                border: 1px solid black;
-                border-radius: 0px;
-                max-width: 500px !important;
-            }}
-            .tabla-modal {{
-                width: 100%;
-                border-collapse: collapse;
-            }}
-            .celda-logo {{
-                text-align: right;
-                padding-bottom: 20px;
-            }}
-            .logo-said-img {{
-                width: 120px;
-                filter: brightness(0);
-            }}
-            .titulo-servicio {{
-                font-family: 'Courier Prime', monospace;
-                color: black;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                font-size: 1.2rem;
-                margin: 0;
-            }}
-            .contenido-servicio {{
-                font-family: 'Courier Prime', monospace;
-                color: black;
-                text-align: justify;
-                line-height: 1.6;
-                font-size: 0.95rem;
-                padding-top: 20px;
-            }}
-        </style>
-        
-        <table class="tabla-modal">
-            <tr>
-                <td class="celda-logo">
-                    <img src="data:image/png;base64,{logo_main_b64}" class="logo-said-img">
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <h3 class="titulo-servicio">{nombre_servicio}</h3>
-                    <hr style="border-top: 1px solid black; margin: 10px 0;">
-                </td>
-            </tr>
-            <tr>
-                <td class="contenido-servicio">
-                    {descripcion}
-                </td>
-            </tr>
-        </table>
-    """, unsafe_allow_html=True)
-
-    if st.button("CERRAR", use_container_width=True):
-        st.rerun()
-
-# 3. BARRA GRIS (TU POSICIÓN EXACTA)
-st.markdown(f"""
-    <style>
-        .franja-servicios-final {{
-            width: 100vw !important;
-            margin-left: -50vw !important;
-            left: 50% !important;
-            position: relative !important;
-            background-color: #D3D3D3 !important;
-            margin-top: 20px !important;
-            padding: 25px 0 !important;
-            display: flex;
-            justify-content: center;
-        }}
-        div[data-testid="stRadio"]:has(label:contains("menu_said_final")) > div {{
-            flex-direction: row !important;
-            justify-content: center !important;
-            gap: 40px !important;
-        }}
-        div[data-testid="stRadio"]:has(label:contains("menu_said_final")) label {{
-            background: none !important;
-            border: none !important;
-            color: black !important;
-            font-family: 'Courier Prime', monospace !important;
-            font-size: 0.72rem !important;
-            font-weight: bold !important;
-            text-transform: uppercase !important;
-            cursor: pointer !important;
-        }}
-        div[data-testid="stRadio"]:has(label:contains("menu_said_final")) input {{ display: none !important; }}
-    /* --- REPARACIÓN DE BOTONES BLANCOS (SAID MONTAÑO) --- */
-    div.stButton > button:has(p) {{
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 1px solid #000000 !important;
-        border-radius: 0px !important;
-        height: 1px !important; 
-        width: 135px !important;
-        padding: 0px !important;
-        margin-top: -20px !important; 
-    }}
-
-    div.stButton > button:has(p) p {{
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        font-family: 'Courier Prime', monospace !important;
-        font-size: 0.7rem !important;
-        font-weight: bold !important;
-        letter-spacing: 2px !important;
-    }}
-
-    /* PROTECCIÓN DE FOTOS (ALTO INDUSTRIAL) */
-    div.stButton > button:not(:has(p)) {{
-        background-color: transparent !important;
-        height: 500px !important;
-        border: 1px solid #eee !important;
-    }}
-    </style>
-""", unsafe_allow_html=True)
-
-# 4. RENDERIZADO
-if 'key_srv' not in st.session_state:
-    st.session_state.key_srv = 0
-
-st.markdown('<div class="franja-servicios-final">', unsafe_allow_html=True)
-opcion = st.radio(
-    label="menu_said_final",
-    options=list(INFO_ESTUDIO_SAID.keys()),
-    index=None,
-    horizontal=True,
-    label_visibility="collapsed",
-    key=f"srv_{st.session_state.key_srv}"
-)
-st.markdown('</div>', unsafe_allow_html=True)
-
-if opcion:
-    st.session_state.key_srv += 1
-    desplegar_info_servicio(opcion)
-import streamlit.components.v1 as components
 
 # --- ZOOM FORZADO PARA SERVIDORES SEGUROS ---
 components.html("""
@@ -915,27 +1005,4 @@ components.html("""
 """, height=0)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #===   streamlit run app.py   ===#
